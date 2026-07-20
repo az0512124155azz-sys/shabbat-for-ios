@@ -1,6 +1,9 @@
 import WidgetKit
 import SwiftUI
-import AppIntents
+#if compiler(>=5.9)
+import AppIntents   // iOS 16+ SDK (Xcode 15+). Guarded so the widget still
+                    // builds on older Xcode (13/14) without interactive tap.
+#endif
 
 // ── shared plumbing ───────────────────────────────────────────────────────────
 
@@ -22,9 +25,14 @@ let goldColor = Color(red: 0.96, green: 0.65, blue: 0.14)
 let purpleColor = Color(red: 0.77, green: 0.71, blue: 0.99)
 let grayColor = Color(red: 0.48, green: 0.54, blue: 0.62)
 
+/// Fills the widget with the app's navy background. Uses a ZStack rather than
+/// iOS 17's `containerBackground`, so it compiles and renders on iOS 15+.
 struct WidgetBG: ViewModifier {
     func body(content: Content) -> some View {
-        content.containerBackground(for: .widget) { shabBG }
+        ZStack {
+            shabBG
+            content
+        }
     }
 }
 
@@ -42,6 +50,7 @@ struct ShabbatTimesView: View {
                     Text(ShabbatCore.fmt(t.candle, tz: city.tz))
                         .font(.title2).bold().foregroundColor(goldColor)
                 }
+                Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 40)
                 VStack(spacing: 2) {
                     Text("יציאה").font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(t.havdalah, tz: city.tz))
@@ -129,6 +138,7 @@ struct SunTimesView: View {
                     Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz))
                         .font(.title2).bold().foregroundColor(goldColor)
                 }
+                Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 40)
                 VStack(spacing: 2) {
                     Text("צאת הכוכבים").font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, noon), tz: city.tz))
@@ -177,8 +187,12 @@ struct ParashaWidget: Widget {
     }
 }
 
-// ── 6. הנחת תפילין (כפתור אינטראקטיבי) ───────────────────────────────────────
+// ── 6. הנחת תפילין ────────────────────────────────────────────────────────────
+// On iOS 17 (built with Xcode 15+) the button toggles inside the widget.
+// On older builds it shows the status and tapping opens the app.
 
+#if compiler(>=5.9)
+@available(iOS 17.0, *)
 struct ToggleTefillinIntent: AppIntent {
     static var title: LocalizedStringResource = "הנחת תפילין"
     static var isDiscoverable: Bool = false
@@ -189,22 +203,36 @@ struct ToggleTefillinIntent: AppIntent {
         return .result()
     }
 }
+#endif
+
+struct TefillinButtonLabel: View {
+    let on: Bool
+    var body: some View {
+        Text(on ? "✅ הנחתי" : "☐ עדיין לא")
+            .font(.headline)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(on ? Color.green.opacity(0.85) : Color.white.opacity(0.1))
+            .foregroundColor(on ? .white : grayColor)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+}
 
 struct TefillinView: View {
     var body: some View {
         let on = ShabbatCore.isTefillinToday()
         VStack(spacing: 8) {
             Text("👉 תפילין היום").font(.caption2).foregroundColor(grayColor)
-            Button(intent: ToggleTefillinIntent()) {
-                Text(on ? "✅ הנחתי" : "☐ עדיין לא")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .background(on ? Color.green.opacity(0.85) : Color.white.opacity(0.1))
-                    .foregroundColor(on ? .white : grayColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+            #if compiler(>=5.9)
+            if #available(iOS 17.0, *) {
+                Button(intent: ToggleTefillinIntent()) { TefillinButtonLabel(on: on) }
+                    .buttonStyle(.plain)
+            } else {
+                TefillinButtonLabel(on: on)
             }
-            .buttonStyle(.plain)
+            #else
+            TefillinButtonLabel(on: on)
+            #endif
         }
         .environment(\.layoutDirection, .rightToLeft)
         .modifier(WidgetBG())
