@@ -25,14 +25,22 @@ let goldColor = Color(red: 0.96, green: 0.65, blue: 0.14)
 let purpleColor = Color(red: 0.77, green: 0.71, blue: 0.99)
 let grayColor = Color(red: 0.48, green: 0.54, blue: 0.62)
 
-/// Fills the widget with the app's navy background. Uses a ZStack rather than
-/// iOS 17's `containerBackground`, so it compiles and renders on iOS 15+.
+/// Fills the widget with the app's navy background. On iOS 17+ (built with
+/// Xcode 15+) it uses the modern `containerBackground` so StandBy and tinting
+/// behave correctly on new iOS (incl. iOS 26); on iOS 15/16 or older Xcode it
+/// falls back to a ZStack fill. ViewModifier.body is @ViewBuilder, so the
+/// conditional branches are fine.
 struct WidgetBG: ViewModifier {
     func body(content: Content) -> some View {
-        ZStack {
-            shabBG
-            content
+        #if compiler(>=5.9)
+        if #available(iOS 17.0, *) {
+            content.containerBackground(for: .widget) { shabBG }
+        } else {
+            ZStack { shabBG; content }
         }
+        #else
+        ZStack { shabBG; content }
+        #endif
     }
 }
 
