@@ -33,6 +33,10 @@
 			isa = PBXBuildFile;
 			fileRef = BB1A2A1A2A1A2A1A2A1A2A23;
 		};
+		BB1A2A1A2A1A2A1A2A1A2A35 = {
+			isa = PBXBuildFile;
+			fileRef = BB1A2A1A2A1A2A1A2A1A2A27;
+		};
 		BB1A2A1A2A1A2A1A2A1A2A34 = {
 			isa = PBXBuildFile;
 			fileRef = BB1A2A1A2A1A2A1A2A1A2A26;
@@ -117,6 +121,13 @@
 			path = ShabbatWidgets/ShabbatWidgets.entitlements;
 			sourceTree = "<group>";
 		};
+		BB1A2A1A2A1A2A1A2A1A2A27 = {
+			isa = PBXFileReference;
+			lastKnownFileType = folder.assetcatalog;
+			name = Assets.xcassets;
+			path = Assets.xcassets;
+			sourceTree = "<group>";
+		};
 		BB1A2A1A2A1A2A1A2A1A2A26 = {
 			isa = PBXFileReference;
 			explicitFileType = "wrapper.app-extension";
@@ -134,6 +145,7 @@
 			isa = PBXGroup;
 			children = (
 				AA1A2A1A2A1A2A1A2A2B0003,
+				BB1A2A1A2A1A2A1A2A1A2A27,
 				BB1A2A1A2A1A2A1A2A1A2A40,
 				AA1A2A1A2A1A2A1A2A1A2A04,
 				BB1A2A1A2A1A2A1A2A1A2A26,
@@ -199,6 +211,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AA1A2A1A2A1A2A1A2A1A2A01,
+				BB1A2A1A2A1A2A1A2A1A2A35,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

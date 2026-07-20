@@ -18,10 +18,41 @@ struct WebViewContainer: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         context.coordinator.webView = webView
 
-        if let url = Bundle.main.url(forResource: "shabbat", withExtension: "html") {
+        // Over-the-air content: load a previously downloaded copy if present,
+        // otherwise the bundled file. Then fetch the latest version from
+        // GitHub in the background for next launch, so small changes (design
+        // tweaks, new cities) reach users without an App Store update.
+        let cached = Self.cachedContentURL()
+        if FileManager.default.fileExists(atPath: cached.path) {
+            webView.loadFileURL(cached, allowingReadAccessTo: cached.deletingLastPathComponent())
+        } else if let url = Bundle.main.url(forResource: "shabbat", withExtension: "html") {
             webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         }
+        Self.fetchLatestContent()
         return webView
+    }
+
+    static func cachedContentURL() -> URL {
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        return dir.appendingPathComponent("shabbat.html")
+    }
+
+    static func fetchLatestContent() {
+        guard let url = URL(string: "https://raw.githubusercontent.com/az0512124155azz-sys/shabbat-for-ios/main/ShabbatApp/shabbat.html") else { return }
+        URLSession.shared.dataTask(with: url) { data, response, _ in
+            guard let http = response as? HTTPURLResponse, http.statusCode == 200,
+                  let data = data, data.count > 10000,
+                  let body = String(data: data, encoding: .utf8),
+                  body.contains("hdr-title"),
+                  body.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("</html>")
+            else { return }
+            let cached = cachedContentURL()
+            let existing = try? String(contentsOf: cached, encoding: .utf8)
+            if existing != body {
+                try? body.write(to: cached, atomically: true, encoding: .utf8)
+            }
+        }.resume()
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
