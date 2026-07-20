@@ -31,6 +31,7 @@ let grayColor = Color(red: 0.48, green: 0.54, blue: 0.62)
 /// falls back to a ZStack fill. ViewModifier.body is @ViewBuilder, so the
 /// conditional branches are fine.
 struct WidgetBG: ViewModifier {
+    @ViewBuilder
     func body(content: Content) -> some View {
         #if compiler(>=5.9)
         if #available(iOS 17.0, *) {
