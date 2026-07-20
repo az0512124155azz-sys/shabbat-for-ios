@@ -61,7 +61,7 @@ struct ShabbatTimesWidget: Widget {
         }
         .configurationDisplayName("זמני שבת")
         .description("כניסת ויציאת השבת הקרובה")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
 
@@ -86,7 +86,7 @@ struct NetzWidget: Widget {
         StaticConfiguration(kind: "NetzWidget", provider: ShabProvider()) { _ in NetzView() }
             .configurationDisplayName("הנץ החמה")
             .description("זמן הנץ החמה היום")
-            .supportedFamilies([.systemSmall])
+            .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
@@ -111,7 +111,7 @@ struct TzeitWidget: Widget {
         StaticConfiguration(kind: "TzeitWidget", provider: ShabProvider()) { _ in TzeitView() }
             .configurationDisplayName("צאת הכוכבים")
             .description("זמן צאת הכוכבים היום")
-            .supportedFamilies([.systemSmall])
+            .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
