@@ -17,6 +17,29 @@
 			isa = PBXBuildFile;
 			fileRef = AA1A2A1A2A1A2A1A2A1A2A00;
 		};
+		BB1A2A1A2A1A2A1A2A1A2A30 = {
+			isa = PBXBuildFile;
+			fileRef = BB1A2A1A2A1A2A1A2A1A2A20;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A31 = {
+			isa = PBXBuildFile;
+			fileRef = BB1A2A1A2A1A2A1A2A1A2A21;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A32 = {
+			isa = PBXBuildFile;
+			fileRef = BB1A2A1A2A1A2A1A2A1A2A20;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A33 = {
+			isa = PBXBuildFile;
+			fileRef = BB1A2A1A2A1A2A1A2A1A2A23;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A34 = {
+			isa = PBXBuildFile;
+			fileRef = BB1A2A1A2A1A2A1A2A1A2A26;
+			settings = {
+				ATTRIBUTES = (RemoveHeadersOnCopy, );
+			};
+		};
 		13B07F851A680F5B00A75B9A = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.swift;
@@ -52,6 +75,55 @@
 			path = ShabbatApp.app;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		BB1A2A1A2A1A2A1A2A1A2A20 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			name = ShabbatCore.swift;
+			path = ShabbatApp/ShabbatCore.swift;
+			sourceTree = "<group>";
+		};
+		BB1A2A1A2A1A2A1A2A1A2A21 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			name = NotificationScheduler.swift;
+			path = ShabbatApp/NotificationScheduler.swift;
+			sourceTree = "<group>";
+		};
+		BB1A2A1A2A1A2A1A2A1A2A22 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.entitlements;
+			name = ShabbatApp.entitlements;
+			path = ShabbatApp/ShabbatApp.entitlements;
+			sourceTree = "<group>";
+		};
+		BB1A2A1A2A1A2A1A2A1A2A23 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.swift;
+			name = ShabbatWidgets.swift;
+			path = ShabbatWidgets/ShabbatWidgets.swift;
+			sourceTree = "<group>";
+		};
+		BB1A2A1A2A1A2A1A2A1A2A24 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.xml;
+			name = Info.plist;
+			path = ShabbatWidgets/Info.plist;
+			sourceTree = "<group>";
+		};
+		BB1A2A1A2A1A2A1A2A1A2A25 = {
+			isa = PBXFileReference;
+			lastKnownFileType = text.plist.entitlements;
+			name = ShabbatWidgets.entitlements;
+			path = ShabbatWidgets/ShabbatWidgets.entitlements;
+			sourceTree = "<group>";
+		};
+		BB1A2A1A2A1A2A1A2A1A2A26 = {
+			isa = PBXFileReference;
+			explicitFileType = "wrapper.app-extension";
+			includeInIndex = 0;
+			path = ShabbatWidgetsExtension.appex;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		AA1A2A1A2A1A2A1A2A2B0001 = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -62,7 +134,9 @@
 			isa = PBXGroup;
 			children = (
 				AA1A2A1A2A1A2A1A2A2B0003,
+				BB1A2A1A2A1A2A1A2A1A2A40,
 				AA1A2A1A2A1A2A1A2A1A2A04,
+				BB1A2A1A2A1A2A1A2A1A2A26,
 			);
 			sourceTree = "<group>";
 		};
@@ -71,10 +145,23 @@
 			children = (
 				13B07F851A680F5B00A75B9A,
 				13B07F941A680F5B00A75B9A,
+				BB1A2A1A2A1A2A1A2A1A2A20,
+				BB1A2A1A2A1A2A1A2A1A2A21,
 				AA1A2A1A2A1A2A1A2A1A2A00,
 				AA1A2A1A2A1A2A1A2A1A2A02,
+				BB1A2A1A2A1A2A1A2A1A2A22,
 			);
 			name = ShabbatApp;
+			sourceTree = "<group>";
+		};
+		BB1A2A1A2A1A2A1A2A1A2A40 = {
+			isa = PBXGroup;
+			children = (
+				BB1A2A1A2A1A2A1A2A1A2A23,
+				BB1A2A1A2A1A2A1A2A1A2A24,
+				BB1A2A1A2A1A2A1A2A1A2A25,
+			);
+			name = ShabbatWidgets;
 			sourceTree = "<group>";
 		};
 		AA1A2A1A2A1A2A1A2A2B0004 = {
@@ -84,10 +171,13 @@
 				AA1A2A1A2A1A2A1A2A2B0005,
 				AA1A2A1A2A1A2A1A2A2B0001,
 				AA1A2A1A2A1A2A1A2A2B0006,
+				BB1A2A1A2A1A2A1A2A1A2A53,
 				AA1A2A1A2A1A2A1A2A2B0007,
 			);
 			buildRules = ();
-			dependencies = ();
+			dependencies = (
+				BB1A2A1A2A1A2A1A2A1A2A55,
+			);
 			name = ShabbatApp;
 			productName = ShabbatApp;
 			productReference = AA1A2A1A2A1A2A1A2A1A2A04;
@@ -99,6 +189,8 @@
 			files = (
 				13B07F861A680F5B00A75B9A,
 				13B07F961A680F5B00A75B9A,
+				BB1A2A1A2A1A2A1A2A1A2A30,
+				BB1A2A1A2A1A2A1A2A1A2A31,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -121,6 +213,65 @@
 			shellPath = /bin/sh;
 			shellScript = "";
 		};
+		BB1A2A1A2A1A2A1A2A1A2A50 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB1A2A1A2A1A2A1A2A1A2A33,
+				BB1A2A1A2A1A2A1A2A1A2A32,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A51 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A52 = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A53 = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BB1A2A1A2A1A2A1A2A1A2A34,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A54 = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA1A2A1A2A1A2A1A2A2B0008;
+			proxyType = 1;
+			remoteGlobalIDString = BB1A2A1A2A1A2A1A2A1A2A60;
+			remoteInfo = ShabbatWidgetsExtension;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A55 = {
+			isa = PBXTargetDependency;
+			target = BB1A2A1A2A1A2A1A2A1A2A60;
+			targetProxy = BB1A2A1A2A1A2A1A2A1A2A54;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A60 = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB1A2A1A2A1A2A1A2A1A2A61;
+			buildPhases = (
+				BB1A2A1A2A1A2A1A2A1A2A50,
+				BB1A2A1A2A1A2A1A2A1A2A51,
+				BB1A2A1A2A1A2A1A2A1A2A52,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = ShabbatWidgetsExtension;
+			productName = ShabbatWidgetsExtension;
+			productReference = BB1A2A1A2A1A2A1A2A1A2A26;
+			productType = "com.apple.product-type.app-extension";
+		};
 		AA1A2A1A2A1A2A1A2A2B0008 = {
 			isa = PBXProject;
 			attributes = {
@@ -129,6 +280,9 @@
 				ORGANIZATIONNAME = "Avishai Tzabary";
 				TargetAttributes = {
 					AA1A2A1A2A1A2A1A2A2B0004 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					BB1A2A1A2A1A2A1A2A1A2A60 = {
 						CreatedOnToolsVersion = 15.0;
 					};
 				};
@@ -142,7 +296,10 @@
 			productRefGroup = AA1A2A1A2A1A2A1A2A2B0002;
 			projectDirPath = "";
 			projectRoot = "";
-			targets = (AA1A2A1A2A1A2A1A2A2B0004);
+			targets = (
+				AA1A2A1A2A1A2A1A2A2B0004,
+				BB1A2A1A2A1A2A1A2A1A2A60,
+			);
 		};
 		AA1A2A1A2A1A2A1A2A2B0009 = {
 			isa = XCBuildConfiguration;
@@ -154,7 +311,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -172,7 +329,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_C_LANGUAGE_STANDARD = gnu11;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -185,12 +342,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				BUNDLE_IDENTIFIER = "com.avishait.shabbat";
+				CODE_SIGN_ENTITLEMENTS = ShabbatApp/ShabbatApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ShabbatApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.avishait.shabbat;
@@ -207,17 +365,60 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				BUNDLE_IDENTIFIER = "com.avishait.shabbat";
+				CODE_SIGN_ENTITLEMENTS = ShabbatApp/ShabbatApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = ShabbatApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.avishait.shabbat;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A62 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ShabbatWidgets/ShabbatWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ShabbatWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.avishait.shabbat.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A63 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ShabbatWidgets/ShabbatWidgets.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ShabbatWidgets/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.avishait.shabbat.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -233,6 +434,12 @@
 		AA1A2A1A2A1A2A1A2A2B0011 = {
 			isa = XCConfigurationList;
 			buildConfigurations = (AA1A2A1A2A1A2A1A2A2B0009, AA1A2A1A2A1A2A1A2A2B000A);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BB1A2A1A2A1A2A1A2A1A2A61 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (BB1A2A1A2A1A2A1A2A1A2A62, BB1A2A1A2A1A2A1A2A1A2A63);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
