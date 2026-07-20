@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 54;
 	objects = {
 		13B07F861A680F5B00A75B9A = {
 			isa = PBXBuildFile;
@@ -301,7 +301,7 @@
 				};
 			};
 			buildConfigurationList = AA1A2A1A2A1A2A1A2A2B0011;
-			compatibilityVersion = "Xcode 14.0";
+			compatibilityVersion = "Xcode 12.0";
 			developmentRegion = he;
 			hasScannedForEncodings = 0;
 			knownRegions = (en, he, Base);
