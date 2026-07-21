@@ -56,6 +56,38 @@ jobs:
             CODE_SIGN_ENTITLEMENTS="" \
             build
 
+      - name: Verify and embed widget extension
+        run: |
+          set -e
+          APP="build/Build/Products/Release-iphoneos/ShabbatApp.app"
+          APPEX="build/Build/Products/Release-iphoneos/ShabbatWidgetsExtension.appex"
+          PLUGINS="$APP/PlugIns"
+
+          if [ ! -d "$APP" ]; then
+            echo "App not found at $APP"
+            find build/Build/Products -maxdepth 3 -name '*.app' -o -name '*.appex'
+            exit 1
+          fi
+
+          # Check if widget extension exists
+          if [ -d "$APPEX" ]; then
+            echo "Found widget extension at $APPEX"
+            mkdir -p "$PLUGINS"
+            # Copy widget extension into PlugIns directory if not already there
+            if [ ! -d "$PLUGINS/ShabbatWidgetsExtension.appex" ]; then
+              echo "Embedding widget extension into app bundle..."
+              cp -R "$APPEX" "$PLUGINS/"
+              echo "✓ Widget extension embedded"
+            else
+              echo "✓ Widget extension already embedded"
+            fi
+            ls -la "$PLUGINS/"
+          else
+            echo "Warning: Widget extension not found at $APPEX"
+            echo "Searching for .appex files..."
+            find build/Build/Products -name "*.appex"
+          fi
+
       - name: Package unsigned IPA
         run: |
           set -e
@@ -63,6 +95,15 @@ jobs:
           if [ ! -d "$APP" ]; then
             echo "App not found at $APP"; find build/Build/Products -maxdepth 3 -name '*.app'; exit 1
           fi
+
+          echo "Contents of app bundle:"
+          ls -la "$APP/"
+
+          if [ -d "$APP/PlugIns" ]; then
+            echo "Contents of PlugIns:"
+            ls -la "$APP/PlugIns/"
+          fi
+
           rm -rf Payload ShabbatApp-unsigned.ipa
           mkdir -p Payload
           cp -R "$APP" Payload/
