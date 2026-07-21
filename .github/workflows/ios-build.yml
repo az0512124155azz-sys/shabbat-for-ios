@@ -1,0 +1,81 @@
+name: Build iOS IPA (unsigned)
+
+# Builds the app + widgets on a macOS runner and publishes an UNSIGNED .ipa.
+# An unsigned IPA can be installed on a real iPhone/iPod with a sideloading
+# tool (Sideloadly / AltStore with a free Apple ID, or TrollStore on
+# supported iOS versions). It does NOT require a paid Apple Developer account.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ShabbatApp/**'
+      - 'ShabbatWidgets/**'
+      - 'ShabbatApp.xcodeproj/**'
+      - '.github/workflows/ios-build.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build app (device, no code signing)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project ShabbatApp.xcodeproj \
+            -scheme ShabbatApp \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_ENTITLEMENTS="" \
+            clean build
+
+      - name: Package unsigned IPA
+        run: |
+          set -e
+          APP="build/Build/Products/Release-iphoneos/ShabbatApp.app"
+          if [ ! -d "$APP" ]; then
+            echo "App not found at $APP"; find build/Build/Products -maxdepth 3 -name '*.app'; exit 1
+          fi
+          rm -rf Payload ShabbatApp-unsigned.ipa
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          zip -qry ShabbatApp-unsigned.ipa Payload
+          ls -lh ShabbatApp-unsigned.ipa
+
+      - name: Upload IPA as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ShabbatApp-unsigned-ipa
+          path: ShabbatApp-unsigned.ipa
+          if-no-files-found: error
+
+      - name: Publish IPA to a GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ios-latest
+          name: Shabbat — iOS (unsigned IPA)
+          body: |
+            Unsigned build of the Shabbat app (iOS 15+), produced automatically by CI.
+
+            How to install on an iPhone/iPod (no paid Apple account needed):
+            - Sideloadly (Windows/Mac) or AltStore — signs the IPA with your own
+              free Apple ID and installs it (re-sign every 7 days).
+            - TrollStore — permanent install on supported iOS versions.
+
+            Note: home-screen widgets share data with the app via an App Group,
+            which free re-signing may strip; the main app works fully either way.
+          files: ShabbatApp-unsigned.ipa
