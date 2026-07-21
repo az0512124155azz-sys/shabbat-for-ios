@@ -28,9 +28,22 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
-      - name: Build app (device, no code signing)
+      - name: Build app and widgets (device, no code signing)
         run: |
           set -o pipefail
+          # Build the widget extension first
+          xcodebuild \
+            -project ShabbatApp.xcodeproj \
+            -scheme ShabbatWidgetsExtension \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGN_ENTITLEMENTS="" \
+            build
+          # Then build the main app (which will embed the widgets)
           xcodebuild \
             -project ShabbatApp.xcodeproj \
             -scheme ShabbatApp \
@@ -41,7 +54,7 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_ENTITLEMENTS="" \
-            clean build
+            build
 
       - name: Package unsigned IPA
         run: |
