@@ -35,3 +35,7 @@
 "tefillin.off" = "☐ Not yet";
 "tefillin.config_name" = "Tefillin";
 "tefillin.config_desc" = "Daily tefillin tracking";
+
+/* Widget: Combo (All times) */
+"combo.config_name" = "All times";
+"combo.config_desc" = "Shabbat, sunrise, and nightfall times";

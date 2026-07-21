@@ -1,6 +1,12 @@
 import WidgetKit
 import SwiftUI
 
+// ── localization helper ───────────────────────────────────────────────────────
+private let widgetBundle = Bundle(identifier: "com.tzabary.shabbat.ShabbatWidgets")!
+func wl(_ key: String, _ comment: String = "") -> String {
+    NSLocalizedString(key, bundle: widgetBundle, comment: comment)
+}
+
 // ── shared plumbing ───────────────────────────────────────────────────────────
 
 struct ShabEntry: TimelineEntry { let date: Date }
@@ -46,18 +52,18 @@ struct ShabbatTimesView: View {
         let city = ShabbatCore.loadCity()
         let t = ShabbatCore.nextShabbat(city)
         VStack(spacing: 6) {
-            Text("\(NSLocalizedString("shabbat.title", comment: "Shabbat widget title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
+            Text("\(wl("shabbat.title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
             HStack(spacing: 18) {
                 VStack(spacing: 2) {
-                    Text(NSLocalizedString("shabbat.candle", comment: "Candle lighting label")).font(.caption2).foregroundColor(goldColor)
+                    Text(wl("shabbat.candle")).font(.caption2).foregroundColor(goldColor)
                     Text(ShabbatCore.fmt(t.candle, tz: city.tz))
-                        .font(.title2).bold().foregroundColor(goldColor)
+                        .font(.title2).bold().foregroundColor(goldColor).frame(minWidth: 60)
                 }
                 Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 40)
                 VStack(spacing: 2) {
-                    Text(NSLocalizedString("shabbat.havdalah", comment: "Havdalah label")).font(.caption2).foregroundColor(purpleColor)
+                    Text(wl("shabbat.havdalah")).font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(t.havdalah, tz: city.tz))
-                        .font(.title2).bold().foregroundColor(purpleColor)
+                        .font(.title2).bold().foregroundColor(purpleColor).frame(minWidth: 60)
                 }
             }
         }
@@ -71,8 +77,8 @@ struct ShabbatTimesWidget: Widget {
         StaticConfiguration(kind: "ShabbatTimesWidget", provider: ShabProvider()) { entry in
             ShabbatTimesView()
         }
-        .configurationDisplayName(NSLocalizedString("shabbat.config_name", comment: "Shabbat widget name"))
-        .description(NSLocalizedString("shabbat.config_desc", comment: "Shabbat widget description"))
+        .configurationDisplayName(wl("shabbat.config_name"))
+        .description(wl("shabbat.config_desc"))
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
@@ -83,9 +89,9 @@ struct NetzView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
         VStack(spacing: 4) {
-            Text(NSLocalizedString("netz.title", comment: "Sunrise widget title")).font(.caption2).foregroundColor(grayColor)
+            Text(wl("netz.title")).font(.caption2).foregroundColor(grayColor)
             Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, ShabbatCore.todayNoon()), tz: city.tz))
-                .font(.title).bold().foregroundColor(goldColor)
+                .font(.title).bold().foregroundColor(goldColor).frame(minWidth: 60)
             Text(city.name).font(.caption2).foregroundColor(grayColor)
         }
         .environment(\.layoutDirection, .rightToLeft)
@@ -96,8 +102,8 @@ struct NetzView: View {
 struct NetzWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "NetzWidget", provider: ShabProvider()) { entry in NetzView() }
-            .configurationDisplayName(NSLocalizedString("netz.config_name", comment: "Sunrise widget name"))
-            .description(NSLocalizedString("netz.config_desc", comment: "Sunrise widget description"))
+            .configurationDisplayName(wl("netz.config_name"))
+            .description(wl("netz.config_desc"))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -108,9 +114,9 @@ struct TzeitView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
         VStack(spacing: 4) {
-            Text(NSLocalizedString("tzeit.title", comment: "Nightfall widget title")).font(.caption2).foregroundColor(grayColor)
+            Text(wl("tzeit.title")).font(.caption2).foregroundColor(grayColor)
             Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, ShabbatCore.todayNoon()), tz: city.tz))
-                .font(.title).bold().foregroundColor(purpleColor)
+                .font(.title).bold().foregroundColor(purpleColor).frame(minWidth: 60)
             Text(city.name).font(.caption2).foregroundColor(grayColor)
         }
         .environment(\.layoutDirection, .rightToLeft)
@@ -120,9 +126,9 @@ struct TzeitView: View {
 
 struct TzeitWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "TzeitWidget", provider: ShabProvider()) { _ in TzeitView() }
-            .configurationDisplayName(NSLocalizedString("tzeit.config_name", comment: "Nightfall widget name"))
-            .description(NSLocalizedString("tzeit.config_desc", comment: "Nightfall widget description"))
+        StaticConfiguration(kind: "TzeitWidget", provider: ShabProvider()) { entry in TzeitView() }
+            .configurationDisplayName(wl("tzeit.config_name"))
+            .description(wl("tzeit.config_desc"))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -134,18 +140,18 @@ struct SunTimesView: View {
         let city = ShabbatCore.loadCity()
         let noon = ShabbatCore.todayNoon()
         VStack(spacing: 6) {
-            Text("\(NSLocalizedString("sun.title", comment: "Sun times widget title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
+            Text("\(wl("sun.title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
             HStack(spacing: 18) {
                 VStack(spacing: 2) {
-                    Text(NSLocalizedString("sun.sunrise", comment: "Sunrise label")).font(.caption2).foregroundColor(goldColor)
+                    Text(wl("sun.sunrise")).font(.caption2).foregroundColor(goldColor)
                     Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz))
-                        .font(.title2).bold().foregroundColor(goldColor)
+                        .font(.title2).bold().foregroundColor(goldColor).frame(minWidth: 60)
                 }
                 Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 40)
                 VStack(spacing: 2) {
-                    Text(NSLocalizedString("sun.nightfall", comment: "Nightfall label")).font(.caption2).foregroundColor(purpleColor)
+                    Text(wl("sun.nightfall")).font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, noon), tz: city.tz))
-                        .font(.title2).bold().foregroundColor(purpleColor)
+                        .font(.title2).bold().foregroundColor(purpleColor).frame(minWidth: 60)
                 }
             }
         }
@@ -157,8 +163,8 @@ struct SunTimesView: View {
 struct SunTimesWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "SunTimesWidget", provider: ShabProvider()) { entry in SunTimesView() }
-            .configurationDisplayName(NSLocalizedString("sun.config_name", comment: "Sun times widget name"))
-            .description(NSLocalizedString("sun.config_desc", comment: "Sun times widget description"))
+            .configurationDisplayName(wl("sun.config_name"))
+            .description(wl("sun.config_desc"))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -170,10 +176,10 @@ struct ParashaView: View {
         let city = ShabbatCore.loadCity()
         let t = ShabbatCore.nextShabbat(city)
         let p = ShabbatCore.parasha(forSaturday: t.saturday)
-        let placeholder = NSLocalizedString("parasha.placeholder", comment: "Parasha placeholder")
-        let format = NSLocalizedString("parasha.format", comment: "Parasha format string")
+        let placeholder = wl("parasha.placeholder")
+        let format = wl("parasha.format")
         VStack(spacing: 4) {
-            Text(NSLocalizedString("parasha.title", comment: "Parasha widget title")).font(.caption2).foregroundColor(grayColor)
+            Text(wl("parasha.title")).font(.caption2).foregroundColor(grayColor)
             Text(p.isEmpty ? placeholder : String(format: format, p))
                 .font(.title3).bold().italic().foregroundColor(goldColor)
                 .minimumScaleFactor(0.6).lineLimit(1)
@@ -186,8 +192,8 @@ struct ParashaView: View {
 struct ParashaWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "ParashaWidget", provider: ShabProvider()) { entry in ParashaView() }
-            .configurationDisplayName(NSLocalizedString("parasha.config_name", comment: "Parasha widget name"))
-            .description(NSLocalizedString("parasha.config_desc", comment: "Parasha widget description"))
+            .configurationDisplayName(wl("parasha.config_name"))
+            .description(wl("parasha.config_desc"))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -200,9 +206,9 @@ struct ParashaWidget: Widget {
 struct TefillinView: View {
     var body: some View {
         let on = ShabbatCore.isTefillinToday()
-        let btnText = on ? NSLocalizedString("tefillin.on", comment: "Tefillin on button") : NSLocalizedString("tefillin.off", comment: "Tefillin off button")
+        let btnText = on ? wl("tefillin.on") : wl("tefillin.off")
         VStack(spacing: 8) {
-            Text(NSLocalizedString("tefillin.title", comment: "Tefillin widget title")).font(.caption2).foregroundColor(grayColor)
+            Text(wl("tefillin.title")).font(.caption2).foregroundColor(grayColor)
             Text(btnText)
                 .font(.headline)
                 .frame(maxWidth: .infinity)
@@ -219,9 +225,58 @@ struct TefillinView: View {
 struct TefillinWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "TefillinWidget", provider: ShabProvider()) { entry in TefillinView() }
-            .configurationDisplayName(NSLocalizedString("tefillin.config_name", comment: "Tefillin widget name"))
-            .description(NSLocalizedString("tefillin.config_desc", comment: "Tefillin widget description"))
+            .configurationDisplayName(wl("tefillin.config_name"))
+            .description(wl("tefillin.config_desc"))
             .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+// ── 7. כניסה + יציאה + הנץ + צאת ────────────────────────────────────────────
+
+struct ComboView: View {
+    var body: some View {
+        let city = ShabbatCore.loadCity()
+        let t = ShabbatCore.nextShabbat(city)
+        let noon = ShabbatCore.todayNoon()
+        VStack(spacing: 8) {
+            Text("\(wl("shabbat.title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
+            HStack(spacing: 12) {
+                VStack(spacing: 1) {
+                    Text(wl("shabbat.candle")).font(.caption2).foregroundColor(goldColor)
+                    Text(ShabbatCore.fmt(t.candle, tz: city.tz))
+                        .font(.title3).bold().foregroundColor(goldColor).frame(minWidth: 50)
+                }
+                Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1, height: 30)
+                VStack(spacing: 1) {
+                    Text(wl("shabbat.havdalah")).font(.caption2).foregroundColor(purpleColor)
+                    Text(ShabbatCore.fmt(t.havdalah, tz: city.tz))
+                        .font(.title3).bold().foregroundColor(purpleColor).frame(minWidth: 50)
+                }
+                Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1, height: 30)
+                VStack(spacing: 1) {
+                    Text(wl("sun.sunrise")).font(.caption2).foregroundColor(goldColor)
+                    Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz))
+                        .font(.title3).bold().foregroundColor(goldColor).frame(minWidth: 50)
+                }
+                Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1, height: 30)
+                VStack(spacing: 1) {
+                    Text(wl("sun.nightfall")).font(.caption2).foregroundColor(purpleColor)
+                    Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, noon), tz: city.tz))
+                        .font(.title3).bold().foregroundColor(purpleColor).frame(minWidth: 50)
+                }
+            }
+        }
+        .environment(\.layoutDirection, .rightToLeft)
+        .modifier(WidgetBG())
+    }
+}
+
+struct ComboWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "ComboWidget", provider: ShabProvider()) { entry in ComboView() }
+            .configurationDisplayName(wl("combo.config_name", "All times"))
+            .description(wl("combo.config_desc", "Shabbat, sunrise, and nightfall times"))
+            .supportedFamilies([.systemMedium, .systemLarge])
     }
 }
 
@@ -236,5 +291,6 @@ struct ShabbatWidgetsBundle: WidgetBundle {
         SunTimesWidget()
         ParashaWidget()
         TefillinWidget()
+        ComboWidget()
     }
 }

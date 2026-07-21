@@ -35,3 +35,7 @@
 "tefillin.off" = "☐ עדיין לא הונחו";
 "tefillin.config_name" = "הנחת תפילין";
 "tefillin.config_desc" = "מעקב הנחת תפילין יומי";
+
+/* Widget: Combo (All times) */
+"combo.config_name" = "כל הזמנים";
+"combo.config_desc" = "כניסה, יציאה, הנץ וצאת כוכבים";
