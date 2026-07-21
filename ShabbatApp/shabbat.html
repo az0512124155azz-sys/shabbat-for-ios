@@ -235,7 +235,12 @@ var CI=[
   {n:"סידני",e:"Sydney",la:-33.8688,lo:151.2093,tz:"Australia/Sydney",c:"אוסטרליה"},
   {n:"טורונטו",e:"Toronto",la:43.6532,lo:-79.3832,tz:"America/Toronto",c:"קנדה"},
   {n:"בואנוס איירס",e:"Buenos Aires",la:-34.6037,lo:-58.3816,tz:"America/Argentina/Buenos_Aires",c:"ארגנטינה"},
+  {n:"בנקוק",e:"Bangkok",la:13.7563,lo:100.5018,tz:"Asia/Bangkok",c:"תאילנד"},
+  {n:"קו סמוי",e:"Koh Samui",la:8.9545,lo:100.2824,tz:"Asia/Bangkok",c:"תאילנד"},
 ];
+
+// ── Language & country translations ───────────────────────────────────────
+var COUNTRY_EN={"ישראל":"Israel","ארה״ב":"USA","בריטניה":"UK","צרפת":"France","גרמניה":"Germany","הולנד":"Netherlands","איטליה":"Italy","איחוד האמירויות":"UAE","יפן":"Japan","אוסטרליה":"Australia","קנדה":"Canada","ארגנטינה":"Argentina","בולגריה":"Bulgaria","תאילנד":"Thailand"};
 
 // ── Sun math – with configurable zenith angle ──────────────────────────────
 function jd(y,m,d){if(m<=2){y--;m+=12;}var A=Math.floor(y/100),B=2-A+Math.floor(A/4);return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5;}
