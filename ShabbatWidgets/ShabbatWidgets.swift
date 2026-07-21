@@ -1,9 +1,5 @@
 import WidgetKit
 import SwiftUI
-#if compiler(>=5.9)
-import AppIntents   // iOS 16+ SDK (Xcode 15+). Guarded so the widget still
-                    // builds on older Xcode (13/14) without interactive tap.
-#endif
 
 // ── shared plumbing ───────────────────────────────────────────────────────────
 
@@ -26,10 +22,8 @@ let purpleColor = Color(red: 0.77, green: 0.71, blue: 0.99)
 let grayColor = Color(red: 0.48, green: 0.54, blue: 0.62)
 
 /// Fills the widget with the app's navy background. On iOS 17+ (built with
-/// Xcode 15+) it uses the modern `containerBackground` so StandBy and tinting
-/// behave correctly on new iOS (incl. iOS 26); on iOS 15/16 or older Xcode it
-/// falls back to a ZStack fill. ViewModifier.body is @ViewBuilder, so the
-/// conditional branches are fine.
+/// Xcode 15+) it uses the modern `containerBackground`; on iOS 15/16 or older
+/// Xcode it falls back to a ZStack fill.
 struct WidgetBG: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {
@@ -197,51 +191,22 @@ struct ParashaWidget: Widget {
 }
 
 // ── 6. הנחת תפילין ────────────────────────────────────────────────────────────
-// On iOS 17 (built with Xcode 15+) the button toggles inside the widget.
-// On older builds it shows the status and tapping opens the app.
-
-#if compiler(>=5.9)
-@available(iOS 17.0, *)
-struct ToggleTefillinIntent: AppIntent {
-    static var title: LocalizedStringResource = "הנחת תפילין"
-    static var isDiscoverable: Bool = false
-
-    func perform() async throws -> some IntentResult {
-        ShabbatCore.toggleTefillinToday()
-        WidgetCenter.shared.reloadTimelines(ofKind: "TefillinWidget")
-        return .result()
-    }
-}
-#endif
-
-struct TefillinButtonLabel: View {
-    let on: Bool
-    var body: some View {
-        Text(on ? "✅ הנחתי" : "☐ עדיין לא")
-            .font(.headline)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-            .background(on ? Color.green.opacity(0.85) : Color.white.opacity(0.1))
-            .foregroundColor(on ? .white : grayColor)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-    }
-}
+// Shows today's status; tapping the widget opens the app to toggle it.
+// (Interactive in-widget buttons need iOS 17, so we keep this compatible with
+// older devices such as the iPod touch on iOS 15.)
 
 struct TefillinView: View {
     var body: some View {
         let on = ShabbatCore.isTefillinToday()
         VStack(spacing: 8) {
             Text("👉 תפילין היום").font(.caption2).foregroundColor(grayColor)
-            #if compiler(>=5.9)
-            if #available(iOS 17.0, *) {
-                Button(intent: ToggleTefillinIntent()) { TefillinButtonLabel(on: on) }
-                    .buttonStyle(.plain)
-            } else {
-                TefillinButtonLabel(on: on)
-            }
-            #else
-            TefillinButtonLabel(on: on)
-            #endif
+            Text(on ? "✅ הנחתי היום" : "☐ עדיין לא הונחו")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background(on ? Color.green.opacity(0.85) : Color.white.opacity(0.1))
+                .foregroundColor(on ? .white : grayColor)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .environment(\.layoutDirection, .rightToLeft)
         .modifier(WidgetBG())
