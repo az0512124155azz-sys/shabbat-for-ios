@@ -1,0 +1,37 @@
+/* Widget: Shabbat Times */
+"shabbat.title" = "🕯️ Shabbat";
+"shabbat.candle" = "Entry";
+"shabbat.havdalah" = "Exit";
+"shabbat.config_name" = "Shabbat Times";
+"shabbat.config_desc" = "Shabbat entry and exit times";
+
+/* Widget: Sunrise */
+"netz.title" = "🌅 Sunrise";
+"netz.config_name" = "Sunrise";
+"netz.config_desc" = "Sunrise time today";
+
+/* Widget: Nightfall */
+"tzeit.title" = "✨ Nightfall";
+"tzeit.config_name" = "Nightfall";
+"tzeit.config_desc" = "Nightfall time today";
+
+/* Widget: Sun Times */
+"sun.title" = "☀️ Today's times";
+"sun.sunrise" = "Sunrise";
+"sun.nightfall" = "Nightfall";
+"sun.config_name" = "Sun times";
+"sun.config_desc" = "Sunrise and nightfall times";
+
+/* Widget: Parasha */
+"parasha.title" = "📖 Weekly Parasha";
+"parasha.placeholder" = "—";
+"parasha.format" = "Parasha %@";
+"parasha.config_name" = "Weekly Parasha";
+"parasha.config_desc" = "Weekly Torah portion";
+
+/* Widget: Tefillin */
+"tefillin.title" = "👉 Tefillin today";
+"tefillin.on" = "✅ Done today";
+"tefillin.off" = "☐ Not yet";
+"tefillin.config_name" = "Tefillin";
+"tefillin.config_desc" = "Daily tefillin tracking";

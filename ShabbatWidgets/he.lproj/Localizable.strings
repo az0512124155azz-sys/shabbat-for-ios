@@ -1,0 +1,37 @@
+/* Widget: Shabbat Times */
+"shabbat.title" = "🕯️ שבת";
+"shabbat.candle" = "כניסה";
+"shabbat.havdalah" = "יציאה";
+"shabbat.config_name" = "זמני שבת";
+"shabbat.config_desc" = "כניסת ויציאת השבת הקרובה";
+
+/* Widget: Sunrise */
+"netz.title" = "🌅 הנץ החמה";
+"netz.config_name" = "הנץ החמה";
+"netz.config_desc" = "זמן הנץ החמה היום";
+
+/* Widget: Nightfall */
+"tzeit.title" = "✨ צאת הכוכבים";
+"tzeit.config_name" = "צאת הכוכבים";
+"tzeit.config_desc" = "זמן צאת הכוכבים היום";
+
+/* Widget: Sun Times */
+"sun.title" = "☀️ זמני היום";
+"sun.sunrise" = "הנץ החמה";
+"sun.nightfall" = "צאת הכוכבים";
+"sun.config_name" = "הנץ וצאת הכוכבים";
+"sun.config_desc" = "הנץ החמה וצאת הכוכבים";
+
+/* Widget: Parasha */
+"parasha.title" = "📖 פרשת השבוע";
+"parasha.placeholder" = "—";
+"parasha.format" = "פרשת %@";
+"parasha.config_name" = "פרשת השבוע";
+"parasha.config_desc" = "פרשת השבוע הקרובה";
+
+/* Widget: Tefillin */
+"tefillin.title" = "👉 תפילין היום";
+"tefillin.on" = "✅ הנחתי היום";
+"tefillin.off" = "☐ עדיין לא הונחו";
+"tefillin.config_name" = "הנחת תפילין";
+"tefillin.config_desc" = "מעקב הנחת תפילין יומי";

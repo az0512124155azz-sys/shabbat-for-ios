@@ -46,16 +46,16 @@ struct ShabbatTimesView: View {
         let city = ShabbatCore.loadCity()
         let t = ShabbatCore.nextShabbat(city)
         VStack(spacing: 6) {
-            Text("🕯️ שבת · \(city.name)").font(.caption2).foregroundColor(grayColor)
+            Text("\(NSLocalizedString("shabbat.title", comment: "Shabbat widget title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
             HStack(spacing: 18) {
                 VStack(spacing: 2) {
-                    Text("כניסה").font(.caption2).foregroundColor(goldColor)
+                    Text(NSLocalizedString("shabbat.candle", comment: "Candle lighting label")).font(.caption2).foregroundColor(goldColor)
                     Text(ShabbatCore.fmt(t.candle, tz: city.tz))
                         .font(.title2).bold().foregroundColor(goldColor)
                 }
                 Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 40)
                 VStack(spacing: 2) {
-                    Text("יציאה").font(.caption2).foregroundColor(purpleColor)
+                    Text(NSLocalizedString("shabbat.havdalah", comment: "Havdalah label")).font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(t.havdalah, tz: city.tz))
                         .font(.title2).bold().foregroundColor(purpleColor)
                 }
@@ -71,8 +71,8 @@ struct ShabbatTimesWidget: Widget {
         StaticConfiguration(kind: "ShabbatTimesWidget", provider: ShabProvider()) { _ in
             ShabbatTimesView()
         }
-        .configurationDisplayName("זמני שבת")
-        .description("כניסת ויציאת השבת הקרובה")
+        .configurationDisplayName(NSLocalizedString("shabbat.config_name", comment: "Shabbat widget name"))
+        .description(NSLocalizedString("shabbat.config_desc", comment: "Shabbat widget description"))
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
     }
 }
@@ -83,7 +83,7 @@ struct NetzView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
         VStack(spacing: 4) {
-            Text("🌅 הנץ החמה").font(.caption2).foregroundColor(grayColor)
+            Text(NSLocalizedString("netz.title", comment: "Sunrise widget title")).font(.caption2).foregroundColor(grayColor)
             Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, ShabbatCore.todayNoon()), tz: city.tz))
                 .font(.title).bold().foregroundColor(goldColor)
             Text(city.name).font(.caption2).foregroundColor(grayColor)
@@ -96,8 +96,8 @@ struct NetzView: View {
 struct NetzWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "NetzWidget", provider: ShabProvider()) { _ in NetzView() }
-            .configurationDisplayName("הנץ החמה")
-            .description("זמן הנץ החמה היום")
+            .configurationDisplayName(NSLocalizedString("netz.config_name", comment: "Sunrise widget name"))
+            .description(NSLocalizedString("netz.config_desc", comment: "Sunrise widget description"))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -108,7 +108,7 @@ struct TzeitView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
         VStack(spacing: 4) {
-            Text("✨ צאת הכוכבים").font(.caption2).foregroundColor(grayColor)
+            Text(NSLocalizedString("tzeit.title", comment: "Nightfall widget title")).font(.caption2).foregroundColor(grayColor)
             Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, ShabbatCore.todayNoon()), tz: city.tz))
                 .font(.title).bold().foregroundColor(purpleColor)
             Text(city.name).font(.caption2).foregroundColor(grayColor)
@@ -121,8 +121,8 @@ struct TzeitView: View {
 struct TzeitWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "TzeitWidget", provider: ShabProvider()) { _ in TzeitView() }
-            .configurationDisplayName("צאת הכוכבים")
-            .description("זמן צאת הכוכבים היום")
+            .configurationDisplayName(NSLocalizedString("tzeit.config_name", comment: "Nightfall widget name"))
+            .description(NSLocalizedString("tzeit.config_desc", comment: "Nightfall widget description"))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -134,16 +134,16 @@ struct SunTimesView: View {
         let city = ShabbatCore.loadCity()
         let noon = ShabbatCore.todayNoon()
         VStack(spacing: 6) {
-            Text("☀️ זמני היום · \(city.name)").font(.caption2).foregroundColor(grayColor)
+            Text("\(NSLocalizedString("sun.title", comment: "Sun times widget title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
             HStack(spacing: 18) {
                 VStack(spacing: 2) {
-                    Text("הנץ החמה").font(.caption2).foregroundColor(goldColor)
+                    Text(NSLocalizedString("sun.sunrise", comment: "Sunrise label")).font(.caption2).foregroundColor(goldColor)
                     Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz))
                         .font(.title2).bold().foregroundColor(goldColor)
                 }
                 Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 40)
                 VStack(spacing: 2) {
-                    Text("צאת הכוכבים").font(.caption2).foregroundColor(purpleColor)
+                    Text(NSLocalizedString("sun.nightfall", comment: "Nightfall label")).font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, noon), tz: city.tz))
                         .font(.title2).bold().foregroundColor(purpleColor)
                 }
@@ -157,8 +157,8 @@ struct SunTimesView: View {
 struct SunTimesWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "SunTimesWidget", provider: ShabProvider()) { _ in SunTimesView() }
-            .configurationDisplayName("הנץ וצאת הכוכבים")
-            .description("הנץ החמה וצאת הכוכבים")
+            .configurationDisplayName(NSLocalizedString("sun.config_name", comment: "Sun times widget name"))
+            .description(NSLocalizedString("sun.config_desc", comment: "Sun times widget description"))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -170,9 +170,11 @@ struct ParashaView: View {
         let city = ShabbatCore.loadCity()
         let t = ShabbatCore.nextShabbat(city)
         let p = ShabbatCore.parasha(forSaturday: t.saturday)
+        let placeholder = NSLocalizedString("parasha.placeholder", comment: "Parasha placeholder")
+        let format = NSLocalizedString("parasha.format", comment: "Parasha format string")
         VStack(spacing: 4) {
-            Text("📖 פרשת השבוע").font(.caption2).foregroundColor(grayColor)
-            Text(p.isEmpty ? "—" : "פרשת \(p)")
+            Text(NSLocalizedString("parasha.title", comment: "Parasha widget title")).font(.caption2).foregroundColor(grayColor)
+            Text(p.isEmpty ? placeholder : String(format: format, p))
                 .font(.title3).bold().italic().foregroundColor(goldColor)
                 .minimumScaleFactor(0.6).lineLimit(1)
         }
@@ -184,8 +186,8 @@ struct ParashaView: View {
 struct ParashaWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "ParashaWidget", provider: ShabProvider()) { _ in ParashaView() }
-            .configurationDisplayName("פרשת השבוע")
-            .description("פרשת השבוע הקרובה")
+            .configurationDisplayName(NSLocalizedString("parasha.config_name", comment: "Parasha widget name"))
+            .description(NSLocalizedString("parasha.config_desc", comment: "Parasha widget description"))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -198,9 +200,10 @@ struct ParashaWidget: Widget {
 struct TefillinView: View {
     var body: some View {
         let on = ShabbatCore.isTefillinToday()
+        let btnText = on ? NSLocalizedString("tefillin.on", comment: "Tefillin on button") : NSLocalizedString("tefillin.off", comment: "Tefillin off button")
         VStack(spacing: 8) {
-            Text("👉 תפילין היום").font(.caption2).foregroundColor(grayColor)
-            Text(on ? "✅ הנחתי היום" : "☐ עדיין לא הונחו")
+            Text(NSLocalizedString("tefillin.title", comment: "Tefillin widget title")).font(.caption2).foregroundColor(grayColor)
+            Text(btnText)
                 .font(.headline)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
@@ -216,8 +219,8 @@ struct TefillinView: View {
 struct TefillinWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "TefillinWidget", provider: ShabProvider()) { _ in TefillinView() }
-            .configurationDisplayName("הנחת תפילין")
-            .description("מעקב הנחת תפילין יומי")
+            .configurationDisplayName(NSLocalizedString("tefillin.config_name", comment: "Tefillin widget name"))
+            .description(NSLocalizedString("tefillin.config_desc", comment: "Tefillin widget description"))
             .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
