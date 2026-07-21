@@ -68,7 +68,7 @@ struct ShabbatTimesView: View {
 
 struct ShabbatTimesWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "ShabbatTimesWidget", provider: ShabProvider()) { _ in
+        StaticConfiguration(kind: "ShabbatTimesWidget", provider: ShabProvider()) { entry in
             ShabbatTimesView()
         }
         .configurationDisplayName(NSLocalizedString("shabbat.config_name", comment: "Shabbat widget name"))
@@ -95,7 +95,7 @@ struct NetzView: View {
 
 struct NetzWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "NetzWidget", provider: ShabProvider()) { _ in NetzView() }
+        StaticConfiguration(kind: "NetzWidget", provider: ShabProvider()) { entry in NetzView() }
             .configurationDisplayName(NSLocalizedString("netz.config_name", comment: "Sunrise widget name"))
             .description(NSLocalizedString("netz.config_desc", comment: "Sunrise widget description"))
             .supportedFamilies([.systemSmall, .systemMedium])
@@ -156,7 +156,7 @@ struct SunTimesView: View {
 
 struct SunTimesWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "SunTimesWidget", provider: ShabProvider()) { _ in SunTimesView() }
+        StaticConfiguration(kind: "SunTimesWidget", provider: ShabProvider()) { entry in SunTimesView() }
             .configurationDisplayName(NSLocalizedString("sun.config_name", comment: "Sun times widget name"))
             .description(NSLocalizedString("sun.config_desc", comment: "Sun times widget description"))
             .supportedFamilies([.systemSmall, .systemMedium])
@@ -185,7 +185,7 @@ struct ParashaView: View {
 
 struct ParashaWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "ParashaWidget", provider: ShabProvider()) { _ in ParashaView() }
+        StaticConfiguration(kind: "ParashaWidget", provider: ShabProvider()) { entry in ParashaView() }
             .configurationDisplayName(NSLocalizedString("parasha.config_name", comment: "Parasha widget name"))
             .description(NSLocalizedString("parasha.config_desc", comment: "Parasha widget description"))
             .supportedFamilies([.systemSmall, .systemMedium])
@@ -218,7 +218,7 @@ struct TefillinView: View {
 
 struct TefillinWidget: Widget {
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "TefillinWidget", provider: ShabProvider()) { _ in TefillinView() }
+        StaticConfiguration(kind: "TefillinWidget", provider: ShabProvider()) { entry in TefillinView() }
             .configurationDisplayName(NSLocalizedString("tefillin.config_name", comment: "Tefillin widget name"))
             .description(NSLocalizedString("tefillin.config_desc", comment: "Tefillin widget description"))
             .supportedFamilies([.systemSmall, .systemMedium])
