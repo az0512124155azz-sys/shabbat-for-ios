@@ -274,8 +274,8 @@ struct ComboView: View {
 struct ComboWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: "ComboWidget", provider: ShabProvider()) { entry in ComboView() }
-            .configurationDisplayName(wl("combo.config_name", "All times"))
-            .description(wl("combo.config_desc", "Shabbat, sunrise, and nightfall times"))
+            .configurationDisplayName(wl("combo.config_name"))
+            .description(wl("combo.config_desc"))
             .supportedFamilies([.systemMedium, .systemLarge])
     }
 }

@@ -1,6 +1,7 @@
 import SwiftUI
 import WebKit
 import WidgetKit
+import UserNotifications
 
 struct WebViewContainer: UIViewRepresentable {
 
@@ -74,10 +75,14 @@ struct WebViewContainer: UIViewRepresentable {
 
         deinit { NotificationCenter.default.removeObserver(self) }
 
-        @objc private func appBecameActive() { injectState() }
+        @objc private func appBecameActive() {
+            injectState()
+            NotificationScheduler.refresh()
+        }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             injectState()
+            NotificationScheduler.refresh()
         }
 
         /// Push native-side state (notification flag + tefillin map) into the page.
@@ -141,5 +146,92 @@ struct ContentView: View {
         WebViewContainer()
             .ignoresSafeArea()
             .preferredColorScheme(.dark)
+            .onAppear {
+                NotificationScheduler.requestPermissions()
+                NotificationScheduler.refresh()
+            }
+    }
+}
+
+// ── Notification Scheduler ────────────────────────────────────────────────────
+
+class NotificationScheduler {
+    static func requestPermissions() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            if granted {
+                DispatchQueue.main.async {
+                    UIApplication.shared.registerForRemoteNotifications()
+                }
+            }
+        }
+    }
+
+    static func enable(_ completion: @escaping (Bool) -> Void) {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
+            if granted {
+                DispatchQueue.main.async {
+                    UIApplication.shared.registerForRemoteNotifications()
+                    ShabbatCore.setNotifEnabled(true)
+                    self.refresh()
+                    completion(true)
+                }
+            } else {
+                completion(false)
+            }
+        }
+    }
+
+    static func disable() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        ShabbatCore.setNotifEnabled(false)
+    }
+
+    static func refresh() {
+        guard ShabbatCore.notifEnabled else {
+            UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+            return
+        }
+
+        let city = ShabbatCore.loadCity()
+        let t = ShabbatCore.nextShabbat(city)
+
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+
+        let candleDate = Calendar.current.date(byAdding: .minute, value: -15, to: t.candle) ?? t.candle
+        scheduleNotification(
+            title: "כניסת שבת",
+            body: "שבת קודמת בעוד 15 דקות",
+            at: candleDate,
+            identifier: "candle_\(Int(t.saturday.timeIntervalSince1970))"
+        )
+
+        let havdalahDate = Calendar.current.date(byAdding: .minute, value: -20, to: t.havdalah) ?? t.havdalah
+        scheduleNotification(
+            title: "סיום שבת",
+            body: "סיום שבת בעוד 20 דקות",
+            at: havdalahDate,
+            identifier: "havdalah_\(Int(t.saturday.timeIntervalSince1970))"
+        )
+    }
+
+    private static func scheduleNotification(title: String, body: String, at date: Date, identifier: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+
+        guard let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false) else {
+            return
+        }
+
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("Notification scheduling failed: \(error)")
+            }
+        }
     }
 }
