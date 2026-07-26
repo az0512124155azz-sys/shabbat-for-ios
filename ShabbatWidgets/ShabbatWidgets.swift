@@ -1,10 +1,84 @@
 import WidgetKit
 import SwiftUI
 
-// ── localization helper ───────────────────────────────────────────────────────
-private let widgetBundle = Bundle(identifier: "com.tzabary.shabbat.ShabbatWidgets")!
+// ── localization ──────────────────────────────────────────────────────────────
+// Widgets must show Hebrew when the device is Hebrew. Resolving strings through
+// the widget extension's .lproj bundle proved unreliable (it kept falling back
+// to English, and force-unwrapping Bundle(identifier:) risked a crash), so the
+// strings live in code and we choose the language from the device's preferred
+// languages directly.
+private func widgetIsHebrew() -> Bool {
+    for code in Locale.preferredLanguages {
+        let c = code.lowercased()
+        if c.hasPrefix("he") || c.hasPrefix("iw") { return true }   // Hebrew (he / legacy iw)
+        if c.hasPrefix("en") { return false }                        // English
+    }
+    return true  // app is Hebrew-first — default to Hebrew
+}
+
+private let WSTR_HE: [String: String] = [
+    "shabbat.title": "🕯️ שבת",
+    "shabbat.candle": "כניסה",
+    "shabbat.havdalah": "יציאה",
+    "shabbat.config_name": "זמני שבת",
+    "shabbat.config_desc": "כניסת ויציאת השבת הקרובה",
+    "netz.title": "🌅 הנץ החמה",
+    "netz.config_name": "הנץ החמה",
+    "netz.config_desc": "זמן הנץ החמה היום",
+    "tzeit.title": "✨ צאת הכוכבים",
+    "tzeit.config_name": "צאת הכוכבים",
+    "tzeit.config_desc": "זמן צאת הכוכבים היום",
+    "sun.title": "☀️ זמני היום",
+    "sun.sunrise": "הנץ החמה",
+    "sun.nightfall": "צאת הכוכבים",
+    "sun.config_name": "הנץ וצאת הכוכבים",
+    "sun.config_desc": "הנץ החמה וצאת הכוכבים",
+    "parasha.title": "📖 פרשת השבוע",
+    "parasha.placeholder": "—",
+    "parasha.format": "פרשת %@",
+    "parasha.config_name": "פרשת השבוע",
+    "parasha.config_desc": "פרשת השבוע הקרובה",
+    "tefillin.title": "👉 תפילין היום",
+    "tefillin.on": "✅ הנחתי היום",
+    "tefillin.off": "☐ עדיין לא הונחו",
+    "tefillin.config_name": "הנחת תפילין",
+    "tefillin.config_desc": "מעקב הנחת תפילין יומי",
+    "combo.config_name": "כל הזמנים",
+    "combo.config_desc": "כניסה, יציאה, הנץ וצאת כוכבים",
+]
+private let WSTR_EN: [String: String] = [
+    "shabbat.title": "🕯️ Shabbat",
+    "shabbat.candle": "Entry",
+    "shabbat.havdalah": "Exit",
+    "shabbat.config_name": "Shabbat Times",
+    "shabbat.config_desc": "Shabbat entry and exit times",
+    "netz.title": "🌅 Sunrise",
+    "netz.config_name": "Sunrise",
+    "netz.config_desc": "Sunrise time today",
+    "tzeit.title": "✨ Nightfall",
+    "tzeit.config_name": "Nightfall",
+    "tzeit.config_desc": "Nightfall time today",
+    "sun.title": "☀️ Today's times",
+    "sun.sunrise": "Sunrise",
+    "sun.nightfall": "Nightfall",
+    "sun.config_name": "Sun times",
+    "sun.config_desc": "Sunrise and nightfall times",
+    "parasha.title": "📖 Weekly Parasha",
+    "parasha.placeholder": "—",
+    "parasha.format": "Parasha %@",
+    "parasha.config_name": "Weekly Parasha",
+    "parasha.config_desc": "Weekly Torah portion",
+    "tefillin.title": "👉 Tefillin today",
+    "tefillin.on": "✅ Done today",
+    "tefillin.off": "☐ Not yet",
+    "tefillin.config_name": "Tefillin",
+    "tefillin.config_desc": "Daily tefillin tracking",
+    "combo.config_name": "All times",
+    "combo.config_desc": "Shabbat, sunrise, and nightfall times",
+]
 func wl(_ key: String, _ comment: String = "") -> String {
-    NSLocalizedString(key, bundle: widgetBundle, comment: comment)
+    let table = widgetIsHebrew() ? WSTR_HE : WSTR_EN
+    return table[key] ?? WSTR_HE[key] ?? key
 }
 
 // ── shared plumbing ───────────────────────────────────────────────────────────
