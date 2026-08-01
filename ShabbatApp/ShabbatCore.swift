@@ -117,11 +117,19 @@ public enum ShabbatCore {
     public static func tzeit(_ c: ShabCity, _ day: Date) -> Date? {
         sol(lat: c.lat, lng: c.lon, day: day, rising: false, zenith: 96)
     }
-    public static func candle(_ c: ShabCity, friday: Date) -> Date? {
-        sunset(c, friday).map { $0.addingTimeInterval(-18 * 60) }
+    private static func candleOffsetMinutes(_ c: ShabCity) -> Double {
+        switch c.name {
+        case "ירושלים": return 40
+        case "חיפה": return 30
+        default: return 18
+        }
     }
+    public static func candle(_ c: ShabCity, friday: Date) -> Date? {
+        sunset(c, friday).map { $0.addingTimeInterval(-candleOffsetMinutes(c) * 60) }
+    }
+    // Havdalah = sun 8.5° below horizon ("3 small stars" – matches Hebcal's default motzaei-Shabbat calculation)
     public static func havdalah(_ c: ShabCity, saturday: Date) -> Date? {
-        sunset(c, saturday).map { $0.addingTimeInterval(42 * 60) }
+        sol(lat: c.lat, lng: c.lon, day: saturday, rising: false, zenith: 98.5)
     }
 
     public static func todayNoon(_ now: Date = Date()) -> Date {

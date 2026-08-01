@@ -26,13 +26,13 @@ enum NotificationScheduler {
                 }
             }
             if let h = t.havdalah {
-                // Fire exactly at havdalah (Shabbat exit) — no artificial lag.
-                if h > now {
+                let fireMotzaei = h.addingTimeInterval(10 * 60)   // 10 minutes after Shabbat exit
+                if fireMotzaei > now {
                     schedule(
                         id: "shab-motzaei-\(week)",
                         title: "⭐ שבוע טוב!",
                         body: "השבת יצאה. שיהיה לך שבוע נפלא ומבורך!",
-                        at: h
+                        at: fireMotzaei
                     )
                 }
             }
