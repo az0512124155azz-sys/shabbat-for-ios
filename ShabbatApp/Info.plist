@@ -20,6 +20,8 @@
     <true/>
     <key>NSUserNotificationsUsageDescription</key>
     <string>לקבלת התראה לפני כניסת שבת</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>כדי למצוא את העיר הקרובה אליך ולהציג את זמני השבת שלה</string>
     <key>UILaunchScreen</key>
     <dict/>
     <key>UIRequiredDeviceCapabilities</key>

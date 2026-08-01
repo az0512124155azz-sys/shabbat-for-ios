@@ -1,6 +1,7 @@
 import SwiftUI
 import WebKit
 import WidgetKit
+import CoreLocation
 
 struct WebViewContainer: UIViewRepresentable {
 
@@ -59,8 +60,13 @@ struct WebViewContainer: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator() }
 
-    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+    class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, CLLocationManagerDelegate {
         weak var webView: WKWebView?
+        private lazy var locationManager: CLLocationManager = {
+            let m = CLLocationManager()
+            m.delegate = self
+            return m
+        }()
 
         override init() {
             super.init()
@@ -124,8 +130,49 @@ struct WebViewContainer: UIViewRepresentable {
                 }
             case "disableNotif":
                 NotificationScheduler.disable()
+            case "locate":
+                let status = locationManager.authorizationStatus
+                switch status {
+                case .notDetermined:
+                    locationManager.requestWhenInUseAuthorization()
+                case .authorizedWhenInUse, .authorizedAlways:
+                    locationManager.requestLocation()
+                default:
+                    reportLocation(nil)
+                }
             default:
                 break
+            }
+        }
+
+        func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+            switch manager.authorizationStatus {
+            case .authorizedWhenInUse, .authorizedAlways:
+                manager.requestLocation()
+            case .denied, .restricted:
+                reportLocation(nil)
+            default:
+                break
+            }
+        }
+
+        func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+            reportLocation(locations.last?.coordinate)
+        }
+
+        func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+            reportLocation(nil)
+        }
+
+        private func reportLocation(_ coord: CLLocationCoordinate2D?) {
+            let js: String
+            if let c = coord {
+                js = "window.nativeLocationResult&&nativeLocationResult(\(c.latitude),\(c.longitude),true)"
+            } else {
+                js = "window.nativeLocationResult&&nativeLocationResult(null,null,false)"
+            }
+            DispatchQueue.main.async {
+                self.webView?.evaluateJavaScript(js, completionHandler: nil)
             }
         }
 
