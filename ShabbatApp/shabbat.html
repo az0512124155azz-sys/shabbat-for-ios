@@ -615,7 +615,7 @@ function hebcalLookup(la,lo,cb){
   document.body.appendChild(script);
 }
 var hebcalOverlaySeq=0;
-function overlayHebcalShabbatTimes(la,lo,tz,fri,sat){
+function overlayHebcalShabbatTimes(la,lo,tz){
   var mySeq=++hebcalOverlaySeq;
   hebcalLookup(la,lo,function(data){
     if(mySeq!==hebcalOverlaySeq||!data||!data.items)return;
@@ -623,22 +623,14 @@ function overlayHebcalShabbatTimes(la,lo,tz,fri,sat){
     for(var i=0;i<data.items.length;i++){
       var it=data.items[i];
       if(!it.date)continue;
-      // Hebcal returns times like "2026-08-07T19:15:00+03:00" — parse as-is
       var d=new Date(it.date);
       if(isNaN(d.getTime()))continue;
-      if(it.category==="candles")candleD=d;
-      if(it.category==="havdalah")havdD=d;
+      if(it.category==="candles"&&!candleD)candleD=d;
+      if(it.category==="havdalah"&&!havdD)havdD=d;
     }
-    if(candleD){document.getElementById("tCandle").textContent=ft(candleD,tz);}
-    if(havdD){document.getElementById("tHav").textContent=ft(havdD,tz);}
+    if(candleD)document.getElementById("tCandle").textContent=ft(candleD,tz);
+    if(havdD)document.getElementById("tHav").textContent=ft(havdD,tz);
   });
-}
-function sameLocalDay(d,ref,tz){
-  try{
-    var a=d.toLocaleDateString("en-CA",{timeZone:tz});
-    var b=ref.toLocaleDateString("en-CA",{timeZone:tz});
-    return a===b;
-  }catch(e){return true;}
 }
 function gpsApply(la,lo){
   var r=nearestCity(la,lo);
@@ -714,7 +706,7 @@ function render(){
   document.getElementById("lblHav").textContent=show.lblOut;
   document.getElementById("tHav").textContent=ft(show.exit,tz);
   document.getElementById("subHav").textContent=show.subOut;
-  if(show===shab)overlayHebcalShabbatTimes(la,lo,tz,fri,sat);
+  if(show===shab)overlayHebcalShabbatTimes(la,lo,tz);
 
   var para=getPara(sat);
   var pc=document.getElementById("paraCard");
