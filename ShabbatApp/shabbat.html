@@ -298,7 +298,7 @@ var srU=function(la,lo,d){return sol(la,lo,d,true,90.833);};
 // Tzet hakochavim = sun 6° below horizon (96°) → matches luach times
 var tzetF=function(la,lo,d){return sol(la,lo,d,false,96);};
 // Candle lighting = 18 min before sunset by default; Jerusalem's well-known custom is 40 min
-function candleOffset(c){if(!c||c.c!=="ישראל")return 18;if(c.n==="ירושלים")return 40;if(c.n==="חיפה")return 30;return 18;}
+function candleOffset(c){if(!c)return 20;if(c.c!=="ישראל")return 18;if(c.n==="ירושלים")return 40;if(c.n==="חיפה")return 30;return 20;}
 var candF=function(la,lo,d,city){var s=ssU(la,lo,d);return s?new Date(s.getTime()-candleOffset(city)*60000):null;};
 // Havdalah = sun 8.5° below horizon ("3 small stars" – matches Hebcal's default motzaei-Shabbat calculation)
 var havdF=function(la,lo,d){return sol(la,lo,d,false,98.5);};
