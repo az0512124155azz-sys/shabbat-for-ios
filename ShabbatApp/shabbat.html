@@ -474,7 +474,8 @@ var NATIVE=(function(){
     city:function(c){try{ShabbatNative.onCityChanged(JSON.stringify(c));}catch(e){}},
     tef:function(k,v){try{ShabbatNative.setTefillin(k,!!v);}catch(e){}},
     enable:function(){try{ShabbatNative.enableNotifications();}catch(e){}},
-    disable:function(){try{ShabbatNative.disableNotifications();}catch(e){}}
+    disable:function(){try{ShabbatNative.disableNotifications();}catch(e){}},
+    locate:function(){try{ShabbatNative.locate();}catch(e){gpsDone();}}
   };
   if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.shabbat){
     var post=function(m){try{window.webkit.messageHandlers.shabbat.postMessage(m);}catch(e){}};
@@ -583,14 +584,16 @@ function gpsBtnClick(){
   var btn=document.getElementById("gpsBtn");
   if(btn){btn.textContent="...";btn.disabled=true;}
   gpsSafetyTimer=setTimeout(gpsDone,20000);
-  if(navigator.geolocation&&navigator.geolocation.getCurrentPosition){
+  // Always prefer native bridge (accurate GPS) over navigator.geolocation
+  // which can return inaccurate network-based location on Android WebView
+  if(NATIVE&&NATIVE.locate){
+    NATIVE.locate();
+  }else if(navigator.geolocation&&navigator.geolocation.getCurrentPosition){
     navigator.geolocation.getCurrentPosition(function(pos){
       gpsApply(pos.coords.latitude,pos.coords.longitude);
     },function(err){
-      if(NATIVE&&NATIVE.locate)NATIVE.locate();else gpsDone();
-    },{enableHighAccuracy:false,timeout:15000,maximumAge:600000});
-  }else if(NATIVE&&NATIVE.locate){
-    NATIVE.locate();
+      gpsDone();
+    },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
   }else gpsDone();
 }
 // If no known city is within ~70km, look up the nearest city + timezone via Hebcal's
