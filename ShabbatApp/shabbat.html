@@ -605,10 +605,9 @@ function hebcalLookup(la,lo,cb){
     .catch(function(){cb(null);});
 }
 var hebcalOverlaySeq=0;
-function overlayHebcalShabbatTimes(la,lo,tz){
-  var mySeq=++hebcalOverlaySeq;
+function fetchHebcalTimes(la,lo,tz,mySeq){
   hebcalLookup(la,lo,function(data){
-    if(mySeq!==hebcalOverlaySeq||!data||!data.items)return;
+    if(mySeq!==renderSeq||!data||!data.items)return;
     var candleD=null,havdD=null;
     for(var i=0;i<data.items.length;i++){
       var it=data.items[i];
@@ -641,8 +640,10 @@ window.nativeLocationResult=function(la,lo,ok){
   else gpsDone();
 };
 
+var renderSeq=0;
 function render(){
   if(!city)return;
+  var mySeq=++renderSeq;
   var now=new Date(),la=city.la,lo=city.lo,tz=city.tz;
   var today=new Date(now);today.setHours(12,0,0,0);
   var dow=now.getDay();
@@ -660,14 +661,11 @@ function render(){
   else{fri=nxtDow(today,5);sat=new Date(fri);sat.setDate(sat.getDate()+1);}
 
   var cT=candF(la,lo,fri,city),hT=havdF(la,lo,sat);
-  // Shabbat as an observance
   var shab={title:t("upcomingShabbat"),kind:"shabbat",entry:cT,exit:hT,
             lblIn:t("entry"),lblOut:t("exit"),
             subIn:cT?cT.toLocaleDateString(FMT_LOCALE,{weekday:"long",timeZone:tz}):t("friday"),
             subOut:t("motzaeiShabbat"),icoIn:"🕯️",icoOut:"⭐"};
-  // Nearest UPCOMING holiday/fast (computed from the Hebrew calendar for this
-  // location). Anything whose observance already ended is skipped, so past
-  // events (e.g. a fast earlier this week) never appear.
+
   var ev=null;
   var HHlist=buildHolidays(now,tz==="Asia/Jerusalem");
   for(var i=0;i<HHlist.length;i++){
@@ -676,10 +674,7 @@ function render(){
     if(o.exit.getTime()<now.getTime())continue;
     if(!ev||o.entry.getTime()<ev.entry.getTime())ev=o;
   }
-  // Show the holiday/fast only when it begins no later than the coming Shabbat
   var show=(ev&&shab.entry&&ev.entry.getTime()<=shab.entry.getTime())?ev:shab;
-
-  // When the shown holiday/fast overlaps the coming Shabbat, title it "שבת + <name>"
   var showTitle=show.title;
   if(show!==shab&&shab.entry&&shab.exit&&show.entry&&show.exit&&
      show.entry.getTime()<=shab.exit.getTime()&&show.exit.getTime()>=shab.entry.getTime()){
@@ -696,7 +691,10 @@ function render(){
   document.getElementById("lblHav").textContent=show.lblOut;
   document.getElementById("tHav").textContent=ft(show.exit,tz);
   document.getElementById("subHav").textContent=show.subOut;
-  if(show===shab)overlayHebcalShabbatTimes(la,lo,tz);
+
+  // Always fetch authoritative times from Hebcal (works for ALL cities worldwide)
+  // and override the local-calc placeholder above
+  fetchHebcalTimes(la,lo,tz,mySeq);
 
   var para=getPara(sat);
   var pc=document.getElementById("paraCard");
