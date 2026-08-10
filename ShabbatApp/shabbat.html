@@ -596,23 +596,13 @@ function gpsBtnClick(){
     },{enableHighAccuracy:true,timeout:15000,maximumAge:0});
   }else gpsDone();
 }
-// If no known city is within ~70km, look up the nearest city + timezone via Hebcal's
-// public JSON API (JSONP, to avoid any CORS/file-origin issues in the WebView).
+// Fetch Shabbat times from Hebcal using their JSON API (CORS-enabled)
 function hebcalLookup(la,lo,cb){
-  var cbName="hebcalCb"+Date.now();
-  var done=false;
-  var script=document.createElement("script");
-  window[cbName]=function(data){
-    done=true;delete window[cbName];
-    if(script.parentNode)script.parentNode.removeChild(script);
-    cb(data);
-  };
-  script.src="https://www.hebcal.com/shabbat?cfg=jsonp&latitude="+encodeURIComponent(la)+"&longitude="+encodeURIComponent(lo)+"&M=on&leyning=off&callback="+cbName;
-  script.onerror=function(){
-    if(!done){delete window[cbName];if(script.parentNode)script.parentNode.removeChild(script);cb(null);}
-  };
-  setTimeout(function(){if(!done){delete window[cbName];if(script.parentNode)script.parentNode.removeChild(script);cb(null);}},10000);
-  document.body.appendChild(script);
+  var url="https://www.hebcal.com/shabbat?cfg=json&latitude="+encodeURIComponent(la)+"&longitude="+encodeURIComponent(lo)+"&M=on&leyning=off&b=20";
+  fetch(url)
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(data){cb(data);})
+    .catch(function(){cb(null);});
 }
 var hebcalOverlaySeq=0;
 function overlayHebcalShabbatTimes(la,lo,tz){
