@@ -7,14 +7,8 @@ import SwiftUI
 // to English, and force-unwrapping Bundle(identifier:) risked a crash), so the
 // strings live in code and we choose the language from the device's preferred
 // languages directly.
-private func widgetIsHebrew() -> Bool {
-    for code in Locale.preferredLanguages {
-        let c = code.lowercased()
-        if c.hasPrefix("he") || c.hasPrefix("iw") { return true }   // Hebrew (he / legacy iw)
-        if c.hasPrefix("en") { return false }                        // English
-    }
-    return true  // app is Hebrew-first — default to Hebrew
-}
+private func widgetLanguage() -> String { ShabbatCore.language }
+private var widgetDirection: LayoutDirection { widgetLanguage() == "he" ? .rightToLeft : .leftToRight }
 
 private let WSTR_HE: [String: String] = [
     "shabbat.title": "🕯️ שבת",
@@ -76,9 +70,28 @@ private let WSTR_EN: [String: String] = [
     "combo.config_name": "All times",
     "combo.config_desc": "Shabbat, sunrise, and nightfall times",
 ]
+private let WSTR_FR: [String: String] = [
+    "shabbat.title": "🕯️ Chabbat", "shabbat.candle": "Entrée", "shabbat.havdalah": "Sortie",
+    "shabbat.config_name": "Horaires de Chabbat", "shabbat.config_desc": "Entrée et sortie du prochain Chabbat",
+    "netz.title": "🌅 Lever du soleil", "netz.config_name": "Lever du soleil", "netz.config_desc": "Heure du lever du soleil aujourd’hui",
+    "tzeit.title": "✨ Tombée de la nuit", "tzeit.config_name": "Tombée de la nuit", "tzeit.config_desc": "Heure de la tombée de la nuit aujourd’hui",
+    "sun.title": "☀️ Horaires du jour", "sun.sunrise": "Lever", "sun.nightfall": "Nuit",
+    "sun.config_name": "Horaires solaires", "sun.config_desc": "Lever du soleil et tombée de la nuit",
+    "parasha.title": "📖 Paracha de la semaine", "parasha.placeholder": "—", "parasha.format": "Paracha %@",
+    "parasha.config_name": "Paracha", "parasha.config_desc": "Paracha de la semaine",
+    "tefillin.title": "👉 Téfilines aujourd’hui", "tefillin.on": "✅ Mis aujourd’hui", "tefillin.off": "☐ Pas encore",
+    "tefillin.config_name": "Téfilines", "tefillin.config_desc": "Suivi quotidien des téfilines",
+    "combo.config_name": "Tous les horaires", "combo.config_desc": "Chabbat, lever du soleil et tombée de la nuit",
+]
 func wl(_ key: String, _ comment: String = "") -> String {
-    let table = widgetIsHebrew() ? WSTR_HE : WSTR_EN
+    let table = widgetLanguage() == "fr" ? WSTR_FR : (widgetLanguage() == "en" ? WSTR_EN : WSTR_HE)
     return table[key] ?? WSTR_HE[key] ?? key
+}
+
+extension View {
+    func fittedWidgetText() -> some View {
+        lineLimit(1).minimumScaleFactor(0.5).allowsTightening(true)
+    }
 }
 
 // ── shared plumbing ───────────────────────────────────────────────────────────
@@ -126,22 +139,22 @@ struct ShabbatTimesView: View {
         let city = ShabbatCore.loadCity()
         let t = ShabbatCore.nextShabbat(city)
         VStack(spacing: 6) {
-            Text("\(wl("shabbat.title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
+            Text("\(wl("shabbat.title")) · \(city.localizedName())").font(.caption2).foregroundColor(grayColor)
             HStack(spacing: 18) {
                 VStack(spacing: 2) {
                     Text(wl("shabbat.candle")).font(.caption2).foregroundColor(goldColor)
                     Text(ShabbatCore.fmt(t.candle, tz: city.tz))
-                        .font(.title2).bold().foregroundColor(goldColor).frame(minWidth: 60)
+                        .font(.title2).bold().foregroundColor(goldColor).fittedWidgetText()
                 }
                 Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 40)
                 VStack(spacing: 2) {
                     Text(wl("shabbat.havdalah")).font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(t.havdalah, tz: city.tz))
-                        .font(.title2).bold().foregroundColor(purpleColor).frame(minWidth: 60)
+                        .font(.title2).bold().foregroundColor(purpleColor).fittedWidgetText()
                 }
             }
         }
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.layoutDirection, widgetDirection)
         .modifier(WidgetBG())
     }
 }
@@ -164,11 +177,11 @@ struct NetzView: View {
         let city = ShabbatCore.loadCity()
         VStack(spacing: 4) {
             Text(wl("netz.title")).font(.caption2).foregroundColor(grayColor)
-            Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, ShabbatCore.todayNoon()), tz: city.tz))
-                .font(.title).bold().foregroundColor(goldColor).frame(minWidth: 60)
-            Text(city.name).font(.caption2).foregroundColor(grayColor)
+            Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)), tz: city.tz))
+                .font(.title).bold().foregroundColor(goldColor).fittedWidgetText()
+            Text(city.localizedName()).font(.caption2).foregroundColor(grayColor)
         }
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.layoutDirection, widgetDirection)
         .modifier(WidgetBG())
     }
 }
@@ -189,11 +202,11 @@ struct TzeitView: View {
         let city = ShabbatCore.loadCity()
         VStack(spacing: 4) {
             Text(wl("tzeit.title")).font(.caption2).foregroundColor(grayColor)
-            Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, ShabbatCore.todayNoon()), tz: city.tz))
-                .font(.title).bold().foregroundColor(purpleColor).frame(minWidth: 60)
-            Text(city.name).font(.caption2).foregroundColor(grayColor)
+            Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)), tz: city.tz))
+                .font(.title).bold().foregroundColor(purpleColor).fittedWidgetText()
+            Text(city.localizedName()).font(.caption2).foregroundColor(grayColor)
         }
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.layoutDirection, widgetDirection)
         .modifier(WidgetBG())
     }
 }
@@ -212,24 +225,24 @@ struct TzeitWidget: Widget {
 struct SunTimesView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
-        let noon = ShabbatCore.todayNoon()
+        let noon = ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)
         VStack(spacing: 6) {
-            Text("\(wl("sun.title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
+            Text("\(wl("sun.title")) · \(city.localizedName())").font(.caption2).foregroundColor(grayColor)
             HStack(spacing: 18) {
                 VStack(spacing: 2) {
                     Text(wl("sun.sunrise")).font(.caption2).foregroundColor(goldColor)
                     Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz))
-                        .font(.title2).bold().foregroundColor(goldColor).frame(minWidth: 60)
+                        .font(.title2).bold().foregroundColor(goldColor).fittedWidgetText()
                 }
                 Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 40)
                 VStack(spacing: 2) {
                     Text(wl("sun.nightfall")).font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, noon), tz: city.tz))
-                        .font(.title2).bold().foregroundColor(purpleColor).frame(minWidth: 60)
+                        .font(.title2).bold().foregroundColor(purpleColor).fittedWidgetText()
                 }
             }
         }
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.layoutDirection, widgetDirection)
         .modifier(WidgetBG())
     }
 }
@@ -258,7 +271,7 @@ struct ParashaView: View {
                 .font(.title3).bold().italic().foregroundColor(goldColor)
                 .minimumScaleFactor(0.6).lineLimit(1)
         }
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.layoutDirection, widgetDirection)
         .modifier(WidgetBG())
     }
 }
@@ -291,7 +304,7 @@ struct TefillinView: View {
                 .foregroundColor(on ? .white : grayColor)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.layoutDirection, widgetDirection)
         .modifier(WidgetBG())
     }
 }
@@ -311,36 +324,36 @@ struct ComboView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
         let t = ShabbatCore.nextShabbat(city)
-        let noon = ShabbatCore.todayNoon()
+        let noon = ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)
         VStack(spacing: 8) {
-            Text("\(wl("shabbat.title")) · \(city.name)").font(.caption2).foregroundColor(grayColor)
+            Text("\(wl("shabbat.title")) · \(city.localizedName())").font(.caption2).foregroundColor(grayColor)
             HStack(spacing: 12) {
                 VStack(spacing: 1) {
                     Text(wl("shabbat.candle")).font(.caption2).foregroundColor(goldColor)
                     Text(ShabbatCore.fmt(t.candle, tz: city.tz))
-                        .font(.title3).bold().foregroundColor(goldColor).frame(minWidth: 50)
+                        .font(.title3).bold().foregroundColor(goldColor).fittedWidgetText()
                 }
                 Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1, height: 30)
                 VStack(spacing: 1) {
                     Text(wl("shabbat.havdalah")).font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(t.havdalah, tz: city.tz))
-                        .font(.title3).bold().foregroundColor(purpleColor).frame(minWidth: 50)
+                        .font(.title3).bold().foregroundColor(purpleColor).fittedWidgetText()
                 }
                 Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1, height: 30)
                 VStack(spacing: 1) {
                     Text(wl("sun.sunrise")).font(.caption2).foregroundColor(goldColor)
                     Text(ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz))
-                        .font(.title3).bold().foregroundColor(goldColor).frame(minWidth: 50)
+                        .font(.title3).bold().foregroundColor(goldColor).fittedWidgetText()
                 }
                 Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1, height: 30)
                 VStack(spacing: 1) {
                     Text(wl("sun.nightfall")).font(.caption2).foregroundColor(purpleColor)
                     Text(ShabbatCore.fmt(ShabbatCore.tzeit(city, noon), tz: city.tz))
-                        .font(.title3).bold().foregroundColor(purpleColor).frame(minWidth: 50)
+                        .font(.title3).bold().foregroundColor(purpleColor).fittedWidgetText()
                 }
             }
         }
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(\.layoutDirection, widgetDirection)
         .modifier(WidgetBG())
     }
 }
