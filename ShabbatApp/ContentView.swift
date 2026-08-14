@@ -40,7 +40,9 @@ struct WebViewContainer: UIViewRepresentable {
     }
 
     static func fetchLatestContent() {
-        guard let url = URL(string: "https://raw.githubusercontent.com/az0512124155azz-sys/shabbat-for-ios/main/ShabbatApp/shabbat.html") else { return }
+        // HEAD always follows the repository's default branch, so over-the-air
+        // updates keep working even if that branch is renamed in GitHub.
+        guard let url = URL(string: "https://raw.githubusercontent.com/az0512124155azz-sys/shabbat-for-ios/HEAD/ShabbatApp/shabbat.html") else { return }
         URLSession.shared.dataTask(with: url) { data, response, _ in
             guard let http = response as? HTTPURLResponse, http.statusCode == 200,
                   let data = data, data.count > 10000,
