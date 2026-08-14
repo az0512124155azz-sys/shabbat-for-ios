@@ -2,9 +2,19 @@ import Foundation
 
 public struct ShabCity {
     public let name: String
+    public let nameEn: String
+    public let nameFr: String
     public let lat: Double
     public let lon: Double
     public let tz: String
+    public let country: String
+    public let isGPS: Bool
+
+    public func localizedName(_ language: String = ShabbatCore.language) -> String {
+        if language == "en", !nameEn.isEmpty { return nameEn }
+        if language == "fr", !nameFr.isEmpty { return nameFr }
+        return name
+    }
 }
 
 /// Native port of the time calculations in shabbat.html.
@@ -20,8 +30,17 @@ public enum ShabbatCore {
     }
 
     // ── city ──────────────────────────────────────────────────────────────
-    public static func saveCity(name: String, lat: Double, lon: Double, tz: String) {
-        defaults.set(["n": name, "la": lat, "lo": lon, "tz": tz] as [String: Any], forKey: "city")
+    public static var language: String {
+        get {
+            if let saved = defaults.string(forKey: "language"), ["he", "en", "fr"].contains(saved) { return saved }
+            let code = Locale.preferredLanguages.first?.lowercased() ?? "he"
+            return code.hasPrefix("fr") ? "fr" : (code.hasPrefix("en") ? "en" : "he")
+        }
+        set { if ["he", "en", "fr"].contains(newValue) { defaults.set(newValue, forKey: "language") } }
+    }
+
+    public static func saveCity(name: String, nameEn: String = "", nameFr: String = "", lat: Double, lon: Double, tz: String, country: String = "", isGPS: Bool = false) {
+        defaults.set(["n": name, "e": nameEn, "f": nameFr, "la": lat, "lo": lon, "tz": tz, "c": country, "gps": isGPS] as [String: Any], forKey: "city")
     }
 
     public static func loadCity() -> ShabCity {
@@ -29,11 +48,15 @@ public enum ShabbatCore {
            let la = d["la"] as? Double, let lo = d["lo"] as? Double {
             return ShabCity(
                 name: d["n"] as? String ?? "ירושלים",
+                nameEn: d["e"] as? String ?? "",
+                nameFr: d["f"] as? String ?? "",
                 lat: la, lon: lo,
-                tz: d["tz"] as? String ?? "Asia/Jerusalem"
+                tz: d["tz"] as? String ?? "Asia/Jerusalem",
+                country: d["c"] as? String ?? "",
+                isGPS: d["gps"] as? Bool ?? false
             )
         }
-        return ShabCity(name: "ירושלים", lat: 31.7683, lon: 35.2137, tz: "Asia/Jerusalem")
+        return ShabCity(name: "ירושלים", nameEn: "Jerusalem", nameFr: "Jérusalem", lat: 31.7683, lon: 35.2137, tz: "Asia/Jerusalem", country: "IL", isGPS: false)
     }
 
     // ── tefillin (date keys are UTC, matching tk() in the HTML) ───────────
@@ -81,8 +104,9 @@ public enum ShabbatCore {
         a.truncatingRemainder(dividingBy: b)
     }
 
-    public static func sol(lat: Double, lng: Double, day: Date, rising: Bool, zenith: Double) -> Date? {
-        let cal = Calendar.current
+    public static func sol(lat: Double, lng: Double, day: Date, rising: Bool, zenith: Double, timeZone: TimeZone = .current) -> Date? {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = timeZone
         let c = cal.dateComponents([.year, .month, .day], from: day)
         guard let y = c.year, let mo = c.month, let d = c.day else { return nil }
         let n = jd(y, mo, d) - 2451545 + 0.5
@@ -109,37 +133,44 @@ public enum ShabbatCore {
     }
 
     public static func sunrise(_ c: ShabCity, _ day: Date) -> Date? {
-        sol(lat: c.lat, lng: c.lon, day: day, rising: true, zenith: 90.833)
+        sol(lat: c.lat, lng: c.lon, day: day, rising: true, zenith: 90.833, timeZone: TimeZone(identifier: c.tz) ?? .current)
     }
     public static func sunset(_ c: ShabCity, _ day: Date) -> Date? {
-        sol(lat: c.lat, lng: c.lon, day: day, rising: false, zenith: 90.833)
+        sol(lat: c.lat, lng: c.lon, day: day, rising: false, zenith: 90.833, timeZone: TimeZone(identifier: c.tz) ?? .current)
     }
     public static func tzeit(_ c: ShabCity, _ day: Date) -> Date? {
-        sol(lat: c.lat, lng: c.lon, day: day, rising: false, zenith: 96)
+        sol(lat: c.lat, lng: c.lon, day: day, rising: false, zenith: 96, timeZone: TimeZone(identifier: c.tz) ?? .current)
     }
     private static func candleOffsetMinutes(_ c: ShabCity) -> Double {
-        switch c.name {
-        case "ירושלים": return 40
-        case "חיפה": return 30
-        default: return 18
-        }
+        if distanceKm(c.lat, c.lon, 31.7683, 35.2137) <= 15 || [c.name, c.nameEn].contains(where: { $0.lowercased().contains("ירושלים") || $0.lowercased().contains("jerusalem") }) { return 40 }
+        if distanceKm(c.lat, c.lon, 32.7940, 34.9896) <= 15 || [c.name, c.nameEn].contains(where: { $0.lowercased().contains("חיפה") || $0.lowercased().contains("haifa") }) { return 30 }
+        let country = c.country.lowercased()
+        return c.tz == "Asia/Jerusalem" || ["il", "israel", "israël", "ישראל"].contains(country) ? 20 : 18
+    }
+    private static func distanceKm(_ aLat: Double, _ aLon: Double, _ bLat: Double, _ bLon: Double) -> Double {
+        let r = 6371.0, p = Double.pi / 180
+        let dLat = (bLat - aLat) * p, dLon = (bLon - aLon) * p
+        let a = sin(dLat / 2) * sin(dLat / 2) + cos(aLat * p) * cos(bLat * p) * sin(dLon / 2) * sin(dLon / 2)
+        return r * 2 * atan2(sqrt(a), sqrt(1 - a))
     }
     public static func candle(_ c: ShabCity, friday: Date) -> Date? {
         sunset(c, friday).map { $0.addingTimeInterval(-candleOffsetMinutes(c) * 60) }
     }
     // Havdalah = sun 8.5° below horizon ("3 small stars" – matches Hebcal's default motzaei-Shabbat calculation)
     public static func havdalah(_ c: ShabCity, saturday: Date) -> Date? {
-        sol(lat: c.lat, lng: c.lon, day: saturday, rising: false, zenith: 98.5)
+        sol(lat: c.lat, lng: c.lon, day: saturday, rising: false, zenith: 98.5, timeZone: TimeZone(identifier: c.tz) ?? .current)
     }
 
-    public static func todayNoon(_ now: Date = Date()) -> Date {
-        Calendar.current.date(bySettingHour: 12, minute: 0, second: 0, of: now) ?? now
+    public static func todayNoon(_ now: Date = Date(), timeZone: TimeZone = .current) -> Date {
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = timeZone
+        return cal.date(bySettingHour: 12, minute: 0, second: 0, of: now) ?? now
     }
 
     /// Mirrors the friday/saturday selection logic in render() of the HTML.
     public static func nextShabbat(_ city: ShabCity, now: Date = Date()) -> (friday: Date, saturday: Date, candle: Date?, havdalah: Date?) {
-        let cal = Calendar.current
-        let noon = todayNoon(now)
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(identifier: city.tz) ?? .current
+        let noon = todayNoon(now, timeZone: cal.timeZone)
         let dow = cal.component(.weekday, from: now) // 1=Sun ... 6=Fri, 7=Sat
 
         func nextDow(_ from: Date, _ target: Int) -> Date {
@@ -152,7 +183,7 @@ public enum ShabbatCore {
         var fri: Date
         var sat: Date
         if dow == 7 {
-            if let h = havdalah(loadCityIfSame(city), saturday: noon), now < h {
+            if let h = havdalah(city, saturday: noon), now < h {
                 sat = noon
                 fri = cal.date(byAdding: .day, value: -1, to: noon)!
             } else {
@@ -168,8 +199,6 @@ public enum ShabbatCore {
         }
         return (fri, sat, candle(city, friday: fri), havdalah(city, saturday: sat))
     }
-
-    private static func loadCityIfSame(_ c: ShabCity) -> ShabCity { c }
 
     public static func fmt(_ d: Date?, tz: String) -> String {
         guard let d = d else { return "--:--" }
@@ -221,7 +250,9 @@ public enum ShabbatCore {
     ]
 
     public static func parasha(forSaturday sat: Date) -> String {
-        let c = Calendar.current.dateComponents([.year, .month, .day], from: sat)
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: loadCity().tz) ?? .current
+        let c = calendar.dateComponents([.year, .month, .day], from: sat)
         guard let y = c.year, let m = c.month, let d = c.day else { return "" }
         let key = y * 10000 + m * 100 + d
         var best = ""

@@ -306,6 +306,7 @@
    if(lang!=='he'&&lang!=='en'&&lang!=='fr')return;
    LANG=lang;FMT_LOCALE=(LANG==='he')?'he-IL':(LANG==='fr')?'fr-FR':'en-US';
    try{localStorage.setItem('shabbat_language',LANG);}catch(e){}
+   if(NATIVE&&NATIVE.language)NATIVE.language(LANG);
    applyLang();closeLangMenu();
    if(city){var inp=document.getElementById('inp');if(inp)inp.value=cityLabel(city);render();schedNext();}else{refreshNotif();}
   }
@@ -562,6 +563,7 @@
       tef:function(k,v){try{ShabbatNative.setTefillin(k,!!v);}catch(e){}},
       enable:function(){try{ShabbatNative.enableNotifications();}catch(e){}},
       disable:function(){try{ShabbatNative.disableNotifications();}catch(e){}},
+      language:function(lang){try{ShabbatNative.setLanguage(lang);}catch(e){}},
       locate:function(){try{ShabbatNative.locate();}catch(e){gpsDone();}}
     };
     if(window.webkit&&window.webkit.messageHandlers&&window.webkit.messageHandlers.shabbat){
@@ -571,6 +573,7 @@
         tef:function(k,v){post({cmd:"tefillin",key:k,value:!!v});},
         enable:function(){post({cmd:"enableNotif"});},
         disable:function(){post({cmd:"disableNotif"});},
+        language:function(lang){post({cmd:"language",language:lang});},
         locate:function(){post({cmd:"locate"});}
       };
     }
@@ -586,6 +589,7 @@
     try{
       if(st&&typeof st.notif!=="undefined")nativeNotifOn=!!st.notif;
       if(st&&st.tef)localStorage.setItem("tef",JSON.stringify(st.tef));
+      if(st&&st.language&&st.language!==LANG)setLanguage(st.language);
       if(city)render();else refreshNotif();
     }catch(e){}
   };

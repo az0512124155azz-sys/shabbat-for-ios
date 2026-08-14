@@ -64,6 +64,7 @@ struct WebViewContainer: UIViewRepresentable {
 
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, CLLocationManagerDelegate {
         weak var webView: WKWebView?
+        private let geocoder = CLGeocoder()
         private lazy var locationManager: CLLocationManager = {
             let m = CLLocationManager()
             m.delegate = self
@@ -98,7 +99,7 @@ struct WebViewContainer: UIViewRepresentable {
             let tef = ShabbatCore.tefillinMap()
             let tefJSON = (try? JSONSerialization.data(withJSONObject: tef))
                 .flatMap { String(data: $0, encoding: .utf8) } ?? "{}"
-            let js = "window.nativeInit&&nativeInit({notif:\(ShabbatCore.notifEnabled),tef:\(tefJSON)})"
+            let js = "window.nativeInit&&nativeInit({notif:\(ShabbatCore.notifEnabled),tef:\(tefJSON),language:\(Self.json(ShabbatCore.language))})"
             webView?.evaluateJavaScript(js, completionHandler: nil)
         }
 
@@ -112,8 +113,12 @@ struct WebViewContainer: UIViewRepresentable {
                    let la = city["la"] as? Double, let lo = city["lo"] as? Double {
                     ShabbatCore.saveCity(
                         name: city["n"] as? String ?? "",
+                        nameEn: city["e"] as? String ?? "",
+                        nameFr: city["f"] as? String ?? "",
                         lat: la, lon: lo,
-                        tz: city["tz"] as? String ?? "Asia/Jerusalem"
+                        tz: city["tz"] as? String ?? "Asia/Jerusalem",
+                        country: city["c"] as? String ?? "",
+                        isGPS: city["gps"] as? Bool ?? false
                     )
                     NotificationScheduler.refresh()
                     WidgetCenter.shared.reloadAllTimelines()
@@ -132,6 +137,12 @@ struct WebViewContainer: UIViewRepresentable {
                 }
             case "disableNotif":
                 NotificationScheduler.disable()
+            case "language":
+                if let language = body["language"] as? String, ["he", "en", "fr"].contains(language) {
+                    ShabbatCore.language = language
+                    NotificationScheduler.refresh()
+                    WidgetCenter.shared.reloadAllTimelines()
+                }
             case "locate":
                 let status = locationManager.authorizationStatus
                 switch status {
@@ -159,22 +170,41 @@ struct WebViewContainer: UIViewRepresentable {
         }
 
         func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-            reportLocation(locations.last?.coordinate)
+            reportLocation(locations.last)
         }
 
         func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
             reportLocation(nil)
         }
 
-        private func reportLocation(_ coord: CLLocationCoordinate2D?) {
-            let js: String
-            if let c = coord {
-                js = "window.nativeLocationResult&&nativeLocationResult(\(c.latitude),\(c.longitude),true)"
-            } else {
-                js = "window.nativeLocationResult&&nativeLocationResult(null,null,false)"
-            }
+        private static func json(_ value: Any) -> String {
+            guard JSONSerialization.isValidJSONObject([value]),
+                  let data = try? JSONSerialization.data(withJSONObject: [value]),
+                  let array = String(data: data, encoding: .utf8) else { return "null" }
+            return String(array.dropFirst().dropLast())
+        }
+
+        private func sendLocation(_ values: [Any]) {
+            guard let data = try? JSONSerialization.data(withJSONObject: values),
+                  let arguments = String(data: data, encoding: .utf8) else { return }
+            let js = "window.nativeLocationResult&&nativeLocationResult.apply(null,\(arguments))"
             DispatchQueue.main.async {
                 self.webView?.evaluateJavaScript(js, completionHandler: nil)
+            }
+        }
+
+        private func reportLocation(_ location: CLLocation?) {
+            guard let location else {
+                sendLocation([NSNull(), NSNull(), false])
+                return
+            }
+            geocoder.cancelGeocode()
+            geocoder.reverseGeocodeLocation(location) { [weak self] placemarks, _ in
+                let p = placemarks?.first
+                let tz = p?.timeZone?.identifier ?? TimeZone.current.identifier
+                let name = p?.locality ?? p?.subAdministrativeArea ?? p?.administrativeArea ?? ""
+                let country = p?.isoCountryCode ?? p?.country ?? ""
+                self?.sendLocation([location.coordinate.latitude, location.coordinate.longitude, true, tz, name, country])
             }
         }
 
