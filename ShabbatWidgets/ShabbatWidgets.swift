@@ -15,7 +15,7 @@ private let WSTR_HE: [String: String] = [
     "shabbat.candle": "כניסה",
     "shabbat.havdalah": "יציאה",
     "shabbat.config_name": "זמני שבת",
-    "shabbat.config_desc": "כניסת ויציאת השבת הקרובה",
+    "shabbat.config_desc": "כניסה ויציאה של השבת או החג הקרובים",
     "netz.title": "🌅 הנץ החמה",
     "netz.config_name": "הנץ החמה",
     "netz.config_desc": "זמן הנץ החמה היום",
@@ -45,7 +45,7 @@ private let WSTR_EN: [String: String] = [
     "shabbat.candle": "Entry",
     "shabbat.havdalah": "Exit",
     "shabbat.config_name": "Shabbat Times",
-    "shabbat.config_desc": "Shabbat entry and exit times",
+    "shabbat.config_desc": "Entry and exit of the next Shabbat or holiday",
     "netz.title": "🌅 Sunrise",
     "netz.config_name": "Sunrise",
     "netz.config_desc": "Sunrise time today",
@@ -72,7 +72,7 @@ private let WSTR_EN: [String: String] = [
 ]
 private let WSTR_FR: [String: String] = [
     "shabbat.title": "🕯️ Chabbat", "shabbat.candle": "Entrée", "shabbat.havdalah": "Sortie",
-    "shabbat.config_name": "Horaires de Chabbat", "shabbat.config_desc": "Entrée et sortie du prochain Chabbat",
+    "shabbat.config_name": "Horaires de Chabbat", "shabbat.config_desc": "Entrée et sortie du prochain Chabbat ou fête",
     "netz.title": "🌅 Lever du soleil", "netz.config_name": "Lever du soleil", "netz.config_desc": "Heure du lever du soleil aujourd’hui",
     "tzeit.title": "✨ Tombée de la nuit", "tzeit.config_name": "Tombée de la nuit", "tzeit.config_desc": "Heure de la tombée de la nuit aujourd’hui",
     "sun.title": "☀️ Horaires du jour", "sun.sunrise": "Lever", "sun.nightfall": "Nuit",
@@ -137,19 +137,19 @@ struct WidgetBG: ViewModifier {
 struct ShabbatTimesView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
-        let t = ShabbatCore.nextShabbat(city)
+        let event = ShabbatCore.nextObservance(city)
         VStack(spacing: 6) {
-            Text("\(wl("shabbat.title")) · \(city.localizedName())").font(.caption2).foregroundColor(grayColor)
+            Text("🕯️ \(event.localizedTitle()) · \(city.localizedName())").font(.caption2).foregroundColor(grayColor)
             HStack(spacing: 18) {
                 VStack(spacing: 2) {
                     Text(wl("shabbat.candle")).font(.caption2).foregroundColor(goldColor)
-                    Text(ShabbatCore.fmt(t.candle, tz: city.tz))
+                    Text(ShabbatCore.fmt(event.entry, tz: city.tz))
                         .font(.title2).bold().foregroundColor(goldColor).fittedWidgetText()
                 }
                 Rectangle().fill(Color.white.opacity(0.14)).frame(width: 1, height: 40)
                 VStack(spacing: 2) {
                     Text(wl("shabbat.havdalah")).font(.caption2).foregroundColor(purpleColor)
-                    Text(ShabbatCore.fmt(t.havdalah, tz: city.tz))
+                    Text(ShabbatCore.fmt(event.exit, tz: city.tz))
                         .font(.title2).bold().foregroundColor(purpleColor).fittedWidgetText()
                 }
             }
@@ -323,20 +323,20 @@ struct TefillinWidget: Widget {
 struct ComboView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
-        let t = ShabbatCore.nextShabbat(city)
+        let event = ShabbatCore.nextObservance(city)
         let noon = ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)
         VStack(spacing: 8) {
-            Text("\(wl("shabbat.title")) · \(city.localizedName())").font(.caption2).foregroundColor(grayColor)
+            Text("🕯️ \(event.localizedTitle()) · \(city.localizedName())").font(.caption2).foregroundColor(grayColor)
             HStack(spacing: 12) {
                 VStack(spacing: 1) {
                     Text(wl("shabbat.candle")).font(.caption2).foregroundColor(goldColor)
-                    Text(ShabbatCore.fmt(t.candle, tz: city.tz))
+                    Text(ShabbatCore.fmt(event.entry, tz: city.tz))
                         .font(.title3).bold().foregroundColor(goldColor).fittedWidgetText()
                 }
                 Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1, height: 30)
                 VStack(spacing: 1) {
                     Text(wl("shabbat.havdalah")).font(.caption2).foregroundColor(purpleColor)
-                    Text(ShabbatCore.fmt(t.havdalah, tz: city.tz))
+                    Text(ShabbatCore.fmt(event.exit, tz: city.tz))
                         .font(.title3).bold().foregroundColor(purpleColor).fittedWidgetText()
                 }
                 Rectangle().fill(Color.white.opacity(0.1)).frame(width: 1, height: 30)

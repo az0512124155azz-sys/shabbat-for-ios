@@ -17,6 +17,16 @@ public struct ShabCity {
     }
 }
 
+public struct ShabObservance {
+    public let names: [String]
+    public let entry: Date
+    public let exit: Date
+
+    public func localizedTitle(_ language: String = ShabbatCore.language) -> String {
+        names.map { ShabbatCore.localizedObservanceName($0, language: language) }.joined(separator: " + ")
+    }
+}
+
 /// Native port of the time calculations in shabbat.html.
 /// The math must stay identical to the JS version so the app and the
 /// widgets/notifications always show the same times.
@@ -36,7 +46,13 @@ public enum ShabbatCore {
             let code = Locale.preferredLanguages.first?.lowercased() ?? "he"
             return code.hasPrefix("fr") ? "fr" : (code.hasPrefix("en") ? "en" : "he")
         }
-        set { if ["he", "en", "fr"].contains(newValue) { defaults.set(newValue, forKey: "language") } }
+        set {
+            guard ["he", "en", "fr"].contains(newValue) else { return }
+            // The app and WidgetKit extension read the same App Group value.
+            // Keep standard defaults in sync as a fallback for older installs.
+            defaults.set(newValue, forKey: "language")
+            UserDefaults.standard.set(newValue, forKey: "language")
+        }
     }
 
     public static func saveCity(name: String, nameEn: String = "", nameFr: String = "", lat: Double, lon: Double, tz: String, country: String = "", isGPS: Bool = false) {
@@ -198,6 +214,141 @@ public enum ShabbatCore {
             sat = cal.date(byAdding: .day, value: 1, to: fri)!
         }
         return (fri, sat, candle(city, friday: fri), havdalah(city, saturday: sat))
+    }
+
+    // MARK: - Upcoming Shabbat / Yom Tov
+
+    /// Returns the nearest active or upcoming sacred period. Overlapping periods
+    /// (for example two days of Rosh Hashanah followed by Shabbat) are merged so
+    /// notifications and widgets use the final exit time, not Saturday night.
+    public static func nextObservance(_ city: ShabCity, now: Date = Date()) -> ShabObservance {
+        var raw: [ShabObservance] = []
+
+        // Include enough Shabbatot for notification scheduling and widget refreshes.
+        var seenShabbat = Set<Int64>()
+        for week in 0..<14 {
+            let ref = now.addingTimeInterval(Double(week) * 7 * 86400)
+            let s = nextShabbat(city, now: ref)
+            if let entry = s.candle, let exit = s.havdalah {
+                let key = Int64(entry.timeIntervalSince1970 / 60)
+                if seenShabbat.insert(key).inserted {
+                    raw.append(ShabObservance(names: ["שבת"], entry: entry, exit: exit))
+                }
+            }
+        }
+
+        let tz = TimeZone(identifier: city.tz) ?? .current
+        var gregorian = Calendar(identifier: .gregorian); gregorian.timeZone = tz
+        let year = gregorian.component(.year, from: now)
+        let israel = city.tz == "Asia/Jerusalem" || ["il", "israel", "israël", "ישראל"].contains(city.country.lowercased())
+        for hy in [year + 3759, year + 3760, year + 3761] {
+            for holiday in yomTovDates(hebrewYear: hy, israel: israel, timeZone: tz) {
+                guard let eve = gregorian.date(byAdding: .day, value: -1, to: holiday.first),
+                      let entry = candle(city, friday: eve),
+                      let exit = havdalah(city, saturday: holiday.last) else { continue }
+                raw.append(ShabObservance(names: [holiday.name], entry: entry, exit: exit))
+            }
+        }
+
+        raw.sort { $0.entry < $1.entry }
+        var merged: [ShabObservance] = []
+        for item in raw {
+            if let last = merged.last, item.entry <= last.exit {
+                let names = last.names + item.names.filter { !last.names.contains($0) }
+                merged[merged.count - 1] = ShabObservance(
+                    names: names,
+                    entry: min(last.entry, item.entry),
+                    exit: max(last.exit, item.exit)
+                )
+            } else {
+                merged.append(item)
+            }
+        }
+        if let result = merged.first(where: { $0.exit > now }) { return result }
+
+        // Defensive fallback (the generated list normally always contains one).
+        let s = nextShabbat(city, now: now)
+        return ShabObservance(names: ["שבת"], entry: s.candle ?? s.friday, exit: s.havdalah ?? s.saturday)
+    }
+
+    public static func localizedObservanceName(_ name: String, language: String = ShabbatCore.language) -> String {
+        guard language != "he" else { return name }
+        let en = [
+            "שבת": "Shabbat", "ראש השנה": "Rosh Hashanah", "יום כיפור": "Yom Kippur",
+            "סוכות": "Sukkot", "שמיני עצרת": "Shemini Atzeret", "פסח": "Passover", "שבועות": "Shavuot"
+        ]
+        let fr = [
+            "שבת": "Chabbat", "ראש השנה": "Roch Hachana", "יום כיפור": "Yom Kippour",
+            "סוכות": "Souccot", "שמיני עצרת": "Chemini Atseret", "פסח": "Pessa'h", "שבועות": "Chavouot"
+        ]
+        return (language == "fr" ? fr[name] : en[name]) ?? name
+    }
+
+    private static func hMod(_ a: Int, _ b: Int) -> Int { ((a % b) + b) % b }
+    private static func gLeap(_ y: Int) -> Bool { y % 4 == 0 && (y % 100 != 0 || y % 400 == 0) }
+    private static func gFix(_ y: Int, _ m: Int, _ d: Int) -> Int {
+        365 * (y - 1) + (y - 1) / 4 - (y - 1) / 100 + (y - 1) / 400
+            + (367 * m - 362) / 12 + (m <= 2 ? 0 : (gLeap(y) ? -1 : -2)) + d
+    }
+    private static func gFromFix(_ date: Int) -> (Int, Int, Int) {
+        let d0 = date - 1, n400 = d0 / 146097, d1 = hMod(d0, 146097)
+        let n100 = d1 / 36524, d2 = hMod(d1, 36524), n4 = d2 / 1461
+        let d3 = hMod(d2, 1461), n1 = d3 / 365
+        var year = 400 * n400 + 100 * n100 + 4 * n4 + n1
+        if n100 == 4 || n1 == 4 { return (year, 12, 31) }
+        year += 1
+        let march = gFix(year, 3, 1)
+        let correction = date < march ? 0 : (gLeap(year) ? 1 : 2)
+        let month = (12 * (date - gFix(year, 1, 1) + correction) + 373) / 367
+        return (year, month, date - gFix(year, month, 1) + 1)
+    }
+    private static let hebrewEpoch = -1373427
+    private static func hLeap(_ y: Int) -> Bool { hMod(7 * y + 1, 19) < 7 }
+    private static func hLastMonth(_ y: Int) -> Int { hLeap(y) ? 13 : 12 }
+    private static func hElapsed(_ y: Int) -> Int {
+        let months = (235 * y - 234) / 19, parts = 12084 + 13753 * months
+        let day = months * 29 + parts / 25920
+        return hMod(3 * (day + 1), 7) < 3 ? day + 1 : day
+    }
+    private static func hCorrection(_ y: Int) -> Int {
+        let a = hElapsed(y - 1), b = hElapsed(y), c = hElapsed(y + 1)
+        if c - b == 356 { return 2 }
+        if b - a == 382 { return 1 }
+        return 0
+    }
+    private static func hNewYear(_ y: Int) -> Int { hebrewEpoch + hElapsed(y) + hCorrection(y) }
+    private static func hYearLength(_ y: Int) -> Int { hNewYear(y + 1) - hNewYear(y) }
+    private static func hMonthLength(_ y: Int, _ m: Int) -> Int {
+        if [2, 4, 6, 10, 13].contains(m) { return 29 }
+        if m == 12 && !hLeap(y) { return 29 }
+        if m == 8 && ![355, 385].contains(hYearLength(y)) { return 29 }
+        if m == 9 && [353, 383].contains(hYearLength(y)) { return 29 }
+        return 30
+    }
+    private static func hFix(_ y: Int, _ m: Int, _ d: Int) -> Int {
+        var result = hNewYear(y) + d - 1
+        if m < 7 {
+            for month in 7...hLastMonth(y) { result += hMonthLength(y, month) }
+            if m > 1 { for month in 1..<m { result += hMonthLength(y, month) } }
+        } else if m > 7 {
+            for month in 7..<m { result += hMonthLength(y, month) }
+        }
+        return result
+    }
+    private static func hDate(_ y: Int, _ m: Int, _ d: Int, timeZone: TimeZone) -> Date {
+        let g = gFromFix(hFix(y, m, d))
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = timeZone
+        return cal.date(from: DateComponents(timeZone: timeZone, year: g.0, month: g.1, day: g.2, hour: 12))!
+    }
+    private static func yomTovDates(hebrewYear y: Int, israel: Bool, timeZone: TimeZone) -> [(name: String, first: Date, last: Date)] {
+        func range(_ name: String, _ month: Int, _ first: Int, _ last: Int) -> (String, Date, Date) {
+            (name, hDate(y, month, first, timeZone: timeZone), hDate(y, month, last, timeZone: timeZone))
+        }
+        return [
+            range("ראש השנה", 7, 1, 2), range("יום כיפור", 7, 10, 10),
+            range("סוכות", 7, 15, 21), range("שמיני עצרת", 7, 22, israel ? 22 : 23),
+            range("פסח", 1, 15, israel ? 21 : 22), range("שבועות", 3, 6, israel ? 6 : 7)
+        ]
     }
 
     public static func fmt(_ d: Date?, tz: String) -> String {
