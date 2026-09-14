@@ -261,7 +261,7 @@ struct SunTimesWidget: Widget {
 struct ParashaView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
-        let event = ShabbatCore.nextObservance(city)
+        let t = ShabbatCore.nextShabbat(city)
         let p = ShabbatCore.parasha(forSaturday: t.saturday)
         let placeholder = wl("parasha.placeholder")
         let format = wl("parasha.format")
@@ -323,7 +323,7 @@ struct TefillinWidget: Widget {
 struct ComboView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
-        let t = ShabbatCore.nextShabbat(city)
+        let event = ShabbatCore.nextObservance(city)
         let noon = ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)
         VStack(spacing: 8) {
             Text("🕯️ \(event.localizedTitle()) · \(city.localizedName())").font(.caption2).foregroundColor(grayColor)
