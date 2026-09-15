@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - main
+      - claude/shabbat-android-ios-review-iet8fw
       - fix/ios-widget-parity-2026-09-15
     paths:
       - 'ShabbatApp/**'
@@ -33,7 +34,6 @@ jobs:
       - name: Build app and widgets (device, no code signing)
         run: |
           set -o pipefail
-          # Build the widget extension first
           xcodebuild \
             -project ShabbatApp.xcodeproj \
             -scheme ShabbatWidgetsExtension \
@@ -45,7 +45,6 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_ENTITLEMENTS="" \
             build
-          # Then build the main app (which will embed the widgets)
           xcodebuild \
             -project ShabbatApp.xcodeproj \
             -scheme ShabbatApp \
@@ -75,7 +74,6 @@ jobs:
             echo "Found widget extension at $APPEX"
             mkdir -p "$PLUGINS"
             if [ ! -d "$PLUGINS/ShabbatWidgetsExtension.appex" ]; then
-              echo "Embedding widget extension into app bundle..."
               cp -R "$APPEX" "$PLUGINS/"
               echo "Widget extension embedded"
             else
@@ -95,14 +93,6 @@ jobs:
             echo "App not found at $APP"
             find build/Build/Products -maxdepth 3 -name '*.app'
             exit 1
-          fi
-
-          echo "Contents of app bundle:"
-          ls -la "$APP/"
-
-          if [ -d "$APP/PlugIns" ]; then
-            echo "Contents of PlugIns:"
-            ls -la "$APP/PlugIns/"
           fi
 
           rm -rf Payload ShabbatApp-unsigned.ipa
