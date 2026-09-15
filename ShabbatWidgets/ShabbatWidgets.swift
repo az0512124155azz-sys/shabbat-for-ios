@@ -11,8 +11,8 @@ private let WSTR_HE: [String: String] = [
     "shabbat.title": "שבת",
     "shabbat.candle": "כניסה",
     "shabbat.havdalah": "יציאה",
-    "shabbat.config_name": "זמני שבת",
-    "shabbat.config_desc": "כניסת ויציאת השבת הקרובה",
+    "shabbat.config_name": "זמני שבת וחג",
+    "shabbat.config_desc": "כניסה ויציאה של שבת או החג הקרובים",
     "netz.title": "הנץ החמה",
     "netz.config_name": "הנץ החמה",
     "netz.config_desc": "זמן הנץ החמה היום",
@@ -36,15 +36,15 @@ private let WSTR_HE: [String: String] = [
     "tefillin.config_name": "הנחת תפילין",
     "tefillin.config_desc": "מעקב הנחת תפילין יומי",
     "combo.config_name": "כל הזמנים",
-    "combo.config_desc": "כניסה, יציאה, הנץ וצאת הכוכבים"
+    "combo.config_desc": "שבת וחג, הנץ וצאת הכוכבים"
 ]
 
 private let WSTR_EN: [String: String] = [
     "shabbat.title": "Shabbat",
     "shabbat.candle": "Entry",
     "shabbat.havdalah": "Exit",
-    "shabbat.config_name": "Shabbat Times",
-    "shabbat.config_desc": "Upcoming Shabbat entry and exit",
+    "shabbat.config_name": "Shabbat & Holiday Times",
+    "shabbat.config_desc": "Upcoming Shabbat or holiday entry and exit",
     "netz.title": "Sunrise",
     "netz.config_name": "Sunrise",
     "netz.config_desc": "Today's sunrise time",
@@ -68,15 +68,15 @@ private let WSTR_EN: [String: String] = [
     "tefillin.config_name": "Tefillin",
     "tefillin.config_desc": "Daily tefillin tracking",
     "combo.config_name": "All Times",
-    "combo.config_desc": "Shabbat, sunrise and nightfall"
+    "combo.config_desc": "Shabbat, holidays, sunrise and nightfall"
 ]
 
 private let WSTR_FR: [String: String] = [
     "shabbat.title": "Chabbat",
     "shabbat.candle": "Entrée",
     "shabbat.havdalah": "Sortie",
-    "shabbat.config_name": "Horaires de Chabbat",
-    "shabbat.config_desc": "Entrée et sortie du prochain Chabbat",
+    "shabbat.config_name": "Horaires Chabbat & fêtes",
+    "shabbat.config_desc": "Entrée et sortie du prochain Chabbat ou fête",
     "netz.title": "Lever du soleil",
     "netz.config_name": "Lever du soleil",
     "netz.config_desc": "Heure du lever du soleil aujourd’hui",
@@ -100,7 +100,7 @@ private let WSTR_FR: [String: String] = [
     "tefillin.config_name": "Téfilines",
     "tefillin.config_desc": "Suivi quotidien des téfilines",
     "combo.config_name": "Tous les horaires",
-    "combo.config_desc": "Chabbat, lever du soleil et tombée de la nuit"
+    "combo.config_desc": "Chabbat, fêtes, lever du soleil et nuit"
 ]
 
 private func wl(_ key: String) -> String {
@@ -224,28 +224,28 @@ private struct TimePill: View {
     }
 }
 
-// MARK: - Shabbat times
+// MARK: - Shabbat / holiday times
 
 struct ShabbatTimesView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
         let city = ShabbatCore.loadCity()
-        let t = ShabbatCore.nextShabbat(city)
+        let event = ShabbatCore.nextObservance(city)
         let compact = family == .systemSmall
 
         VStack(alignment: .leading, spacing: compact ? 9 : 12) {
-            WidgetHeader(icon: "🕯️", title: wl("shabbat.title"), city: city.localizedName())
+            WidgetHeader(icon: "🕯️", title: event.localizedTitle(), city: city.localizedName())
 
             if compact {
                 VStack(spacing: 7) {
-                    TimePill(label: wl("shabbat.candle"), time: ShabbatCore.fmt(t.candle, tz: city.tz), accent: gold, compact: true)
-                    TimePill(label: wl("shabbat.havdalah"), time: ShabbatCore.fmt(t.havdalah, tz: city.tz), accent: purple, compact: true)
+                    TimePill(label: wl("shabbat.candle"), time: ShabbatCore.fmt(event.entry, tz: city.tz), accent: gold, compact: true)
+                    TimePill(label: wl("shabbat.havdalah"), time: ShabbatCore.fmt(event.exit, tz: city.tz), accent: purple, compact: true)
                 }
             } else {
                 HStack(spacing: 10) {
-                    TimePill(label: wl("shabbat.candle"), time: ShabbatCore.fmt(t.candle, tz: city.tz), accent: gold, compact: false)
-                    TimePill(label: wl("shabbat.havdalah"), time: ShabbatCore.fmt(t.havdalah, tz: city.tz), accent: purple, compact: false)
+                    TimePill(label: wl("shabbat.candle"), time: ShabbatCore.fmt(event.entry, tz: city.tz), accent: gold, compact: false)
+                    TimePill(label: wl("shabbat.havdalah"), time: ShabbatCore.fmt(event.exit, tz: city.tz), accent: purple, compact: false)
                 }
             }
         }
@@ -500,14 +500,14 @@ struct TefillinWidget: Widget {
 struct ComboView: View {
     var body: some View {
         let city = ShabbatCore.loadCity()
-        let t = ShabbatCore.nextShabbat(city)
+        let event = ShabbatCore.nextObservance(city)
         let noon = ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)
 
         VStack(alignment: .leading, spacing: 10) {
-            WidgetHeader(icon: "🕯️", title: wl("shabbat.title"), city: city.localizedName())
+            WidgetHeader(icon: "🕯️", title: event.localizedTitle(), city: city.localizedName())
             HStack(spacing: 8) {
-                TimePill(label: wl("shabbat.candle"), time: ShabbatCore.fmt(t.candle, tz: city.tz), accent: gold, compact: true)
-                TimePill(label: wl("shabbat.havdalah"), time: ShabbatCore.fmt(t.havdalah, tz: city.tz), accent: purple, compact: true)
+                TimePill(label: wl("shabbat.candle"), time: ShabbatCore.fmt(event.entry, tz: city.tz), accent: gold, compact: true)
+                TimePill(label: wl("shabbat.havdalah"), time: ShabbatCore.fmt(event.exit, tz: city.tz), accent: purple, compact: true)
             }
             HStack(spacing: 8) {
                 TimePill(label: wl("sun.sunrise"), time: ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz), accent: gold, compact: true)
