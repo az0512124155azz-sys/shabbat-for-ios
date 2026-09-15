@@ -8,7 +8,10 @@ name: Build iOS IPA (unsigned)
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - claude/shabbat-android-ios-review-iet8fw
+      - fix/ios-widget-parity-2026-09-15
     paths:
       - 'ShabbatApp/**'
       - 'ShabbatWidgets/**'
@@ -31,7 +34,6 @@ jobs:
       - name: Build app and widgets (device, no code signing)
         run: |
           set -o pipefail
-          # Build the widget extension first
           xcodebuild \
             -project ShabbatApp.xcodeproj \
             -scheme ShabbatWidgetsExtension \
@@ -43,7 +45,6 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGN_ENTITLEMENTS="" \
             build
-          # Then build the main app (which will embed the widgets)
           xcodebuild \
             -project ShabbatApp.xcodeproj \
             -scheme ShabbatApp \
@@ -69,22 +70,18 @@ jobs:
             exit 1
           fi
 
-          # Check if widget extension exists
           if [ -d "$APPEX" ]; then
             echo "Found widget extension at $APPEX"
             mkdir -p "$PLUGINS"
-            # Copy widget extension into PlugIns directory if not already there
             if [ ! -d "$PLUGINS/ShabbatWidgetsExtension.appex" ]; then
-              echo "Embedding widget extension into app bundle..."
               cp -R "$APPEX" "$PLUGINS/"
-              echo "✓ Widget extension embedded"
+              echo "Widget extension embedded"
             else
-              echo "✓ Widget extension already embedded"
+              echo "Widget extension already embedded"
             fi
             ls -la "$PLUGINS/"
           else
             echo "Warning: Widget extension not found at $APPEX"
-            echo "Searching for .appex files..."
             find build/Build/Products -name "*.appex"
           fi
 
@@ -93,15 +90,9 @@ jobs:
           set -e
           APP="build/Build/Products/Release-iphoneos/ShabbatApp.app"
           if [ ! -d "$APP" ]; then
-            echo "App not found at $APP"; find build/Build/Products -maxdepth 3 -name '*.app'; exit 1
-          fi
-
-          echo "Contents of app bundle:"
-          ls -la "$APP/"
-
-          if [ -d "$APP/PlugIns" ]; then
-            echo "Contents of PlugIns:"
-            ls -la "$APP/PlugIns/"
+            echo "App not found at $APP"
+            find build/Build/Products -maxdepth 3 -name '*.app'
+            exit 1
           fi
 
           rm -rf Payload ShabbatApp-unsigned.ipa
