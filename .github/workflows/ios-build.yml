@@ -8,7 +8,9 @@ name: Build iOS IPA (unsigned)
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - fix/ios-widget-parity-2026-09-15
     paths:
       - 'ShabbatApp/**'
       - 'ShabbatWidgets/**'
@@ -69,22 +71,19 @@ jobs:
             exit 1
           fi
 
-          # Check if widget extension exists
           if [ -d "$APPEX" ]; then
             echo "Found widget extension at $APPEX"
             mkdir -p "$PLUGINS"
-            # Copy widget extension into PlugIns directory if not already there
             if [ ! -d "$PLUGINS/ShabbatWidgetsExtension.appex" ]; then
               echo "Embedding widget extension into app bundle..."
               cp -R "$APPEX" "$PLUGINS/"
-              echo "✓ Widget extension embedded"
+              echo "Widget extension embedded"
             else
-              echo "✓ Widget extension already embedded"
+              echo "Widget extension already embedded"
             fi
             ls -la "$PLUGINS/"
           else
             echo "Warning: Widget extension not found at $APPEX"
-            echo "Searching for .appex files..."
             find build/Build/Products -name "*.appex"
           fi
 
@@ -93,7 +92,9 @@ jobs:
           set -e
           APP="build/Build/Products/Release-iphoneos/ShabbatApp.app"
           if [ ! -d "$APP" ]; then
-            echo "App not found at $APP"; find build/Build/Products -maxdepth 3 -name '*.app'; exit 1
+            echo "App not found at $APP"
+            find build/Build/Products -maxdepth 3 -name '*.app'
+            exit 1
           fi
 
           echo "Contents of app bundle:"
