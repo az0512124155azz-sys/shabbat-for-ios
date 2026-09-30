@@ -19,42 +19,121 @@ struct WebViewContainer: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         context.coordinator.webView = webView
 
-        // Over-the-air content: load a previously downloaded copy if present,
-        // otherwise the bundled file. Then fetch the latest version from
-        // GitHub in the background for next launch, so small changes (design
-        // tweaks, new cities) reach users without an App Store update.
-        let cached = Self.cachedContentURL()
-        if FileManager.default.fileExists(atPath: cached.path) {
-            webView.loadFileURL(cached, allowingReadAccessTo: cached.deletingLastPathComponent())
-        } else if let url = Bundle.main.url(forResource: "shabbat", withExtension: "html") {
+        // App Store-safe OTA model:
+        // the executable HTML/JavaScript stays bundled with the app.
+        // Only validated JSON data/config is downloaded from the shared OTA
+        // production/staging manifest.
+        if let url = Bundle.main.url(forResource: "shabbat", withExtension: "html") {
             webView.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         }
-        Self.fetchLatestContent()
+
+        Self.fetchLatestRemoteConfig { config in
+            guard let config else { return }
+            DispatchQueue.main.async {
+                context.coordinator.applyRemoteConfig(config)
+            }
+        }
+
         return webView
     }
 
-    static func cachedContentURL() -> URL {
-        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        return dir.appendingPathComponent("shabbat.html")
+    private static var otaManifestURL: URL? {
+#if DEBUG
+        return URL(string:
+            "https://raw.githubusercontent.com/az0512124155azz-sys/" +
+            "shabbat-for-android/main/ota/staging/manifest.json"
+        )
+#else
+        return URL(string:
+            "https://raw.githubusercontent.com/az0512124155azz-sys/" +
+            "shabbat-for-android/main/ota/manifest.json"
+        )
+#endif
     }
 
-    static func fetchLatestContent() {
-        // HEAD always follows the repository's default branch, so over-the-air
-        // updates keep working even if that branch is renamed in GitHub.
-        guard let url = URL(string: "https://raw.githubusercontent.com/az0512124155azz-sys/shabbat-for-ios/HEAD/ShabbatApp/shabbat.html") else { return }
-        URLSession.shared.dataTask(with: url) { data, response, _ in
-            guard let http = response as? HTTPURLResponse, http.statusCode == 200,
-                  let data = data, data.count > 10000,
-                  let body = String(data: data, encoding: .utf8),
-                  body.contains("hdr-title"),
-                  body.trimmingCharacters(in: .whitespacesAndNewlines).hasSuffix("</html>")
-            else { return }
-            let cached = cachedContentURL()
-            let existing = try? String(contentsOf: cached, encoding: .utf8)
-            if existing != body {
-                try? body.write(to: cached, atomically: true, encoding: .utf8)
+    private static func cachedRemoteConfigURL() -> URL {
+        let dir = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        try? FileManager.default.createDirectory(
+            at: dir,
+            withIntermediateDirectories: true
+        )
+        return dir.appendingPathComponent("ota-content.json")
+    }
+
+    static func cachedRemoteConfig() -> [String: Any]? {
+        let url = cachedRemoteConfigURL()
+        guard let data = try? Data(contentsOf: url),
+              let object = try? JSONSerialization.jsonObject(with: data),
+              let config = object as? [String: Any]
+        else {
+            return nil
+        }
+        return config
+    }
+
+    private static func currentBuildNumber() -> Int {
+        let value = Bundle.main.object(
+            forInfoDictionaryKey: "CFBundleVersion"
+        ) as? String
+        return Int(value ?? "") ?? 0
+    }
+
+    static func fetchLatestRemoteConfig(
+        completion: @escaping ([String: Any]?) -> Void
+    ) {
+        guard let manifestURL = otaManifestURL else {
+            completion(nil)
+            return
+        }
+
+        URLSession.shared.dataTask(with: manifestURL) { manifestData, response, _ in
+            guard
+                let http = response as? HTTPURLResponse,
+                http.statusCode == 200,
+                let manifestData,
+                let manifestObject = try? JSONSerialization.jsonObject(with: manifestData),
+                let manifest = manifestObject as? [String: Any],
+                (manifest["schema"] as? Int) == 1,
+                let revision = manifest["revision"] as? String,
+                !revision.isEmpty,
+                let ios = manifest["ios"] as? [String: Any],
+                let contentURLText = ios["contentUrl"] as? String,
+                let contentURL = URL(string: contentURLText)
+            else {
+                completion(nil)
+                return
             }
+
+            let minBuild = ios["minBuildNumber"] as? Int ?? 1
+            guard currentBuildNumber() >= minBuild else {
+                completion(nil)
+                return
+            }
+
+            URLSession.shared.dataTask(with: contentURL) { data, response, _ in
+                guard
+                    let http = response as? HTTPURLResponse,
+                    http.statusCode == 200,
+                    let data,
+                    let object = try? JSONSerialization.jsonObject(with: data),
+                    let config = object as? [String: Any],
+                    (config["schema"] as? Int) == 1,
+                    (config["revision"] as? String) == revision,
+                    config["labels"] is [String: Any]
+                else {
+                    completion(nil)
+                    return
+                }
+
+                try? data.write(
+                    to: cachedRemoteConfigURL(),
+                    options: .atomic
+                )
+                completion(config)
+            }.resume()
         }.resume()
     }
 
@@ -85,6 +164,18 @@ struct WebViewContainer: UIViewRepresentable {
 
         @objc private func appBecameActive() {
             injectState()
+
+            if let cached = WebViewContainer.cachedRemoteConfig() {
+                applyRemoteConfig(cached)
+            }
+
+            WebViewContainer.fetchLatestRemoteConfig { [weak self] config in
+                guard let self, let config else { return }
+                DispatchQueue.main.async {
+                    self.applyRemoteConfig(config)
+                }
+            }
+
             // Advance the rolling 8-week notification window on every foreground,
             // so reminders keep firing even if the app isn't opened for weeks.
             NotificationScheduler.refresh()
@@ -92,6 +183,24 @@ struct WebViewContainer: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             injectState()
+            if let cached = WebViewContainer.cachedRemoteConfig() {
+                applyRemoteConfig(cached)
+            }
+        }
+
+        func applyRemoteConfig(_ config: [String: Any]) {
+            guard
+                JSONSerialization.isValidJSONObject(config),
+                let data = try? JSONSerialization.data(withJSONObject: config),
+                let json = String(data: data, encoding: .utf8)
+            else {
+                return
+            }
+
+            webView?.evaluateJavaScript(
+                "window.applyRemoteConfig&&window.applyRemoteConfig(\(json))",
+                completionHandler: nil
+            )
         }
 
         /// Push native-side state (notification flag + tefillin map) into the page.
