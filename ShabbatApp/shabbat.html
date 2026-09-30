@@ -279,7 +279,20 @@
    en:{headerTitle:"Shabbat Shalom",tagline:"Accurate Shabbat & holiday times",searchCity:"Search city...",currentLocation:"Current location",sunrise:"Sunrise",nightfall:"Nightfall",omerCount:"Omer Count",omerSoon:"⏳ Counting begins at nightfall",weeklyParasha:"Weekly Parasha",tefillinToday:"Tefillin today",enterCity:"Enter a city above to begin",support:"Support:",shabbatName:"Shabbat",upcomingShabbat:"Upcoming Shabbat",entry:"Entry",exit:"Exit",friday:"Friday",motzaeiShabbat:"Shabbat ends",holidayInSub:"Holiday begins",holidayOutSub:"Holiday ends",fastBegin:"Fast begins",fastEnd:"Fast ends",fastNight:"Eve of fast",fastDawn:"Dawn",fastStars:"Nightfall",tefOn:"✅ Tefillin done today",tefOff:"☐ Not yet",notifOn:"✅ Notifications enabled",notifOff:"🔔 Notify 3 hours before Shabbat",openChrome:"Open in Chrome for notifications",notifDenied:"Notifications blocked. Change in browser settings.",notifPerm:"To get notifications, allow notification permission in phone settings.",notifNo:"Notifications not allowed.",notifTitle:"🕯️ Shabbat Shalom!",notifBody:"Shabbat begins in 3 hours: ",fastPrefix:"Fast of "},
    fr:{headerTitle:"Chabbat Chalom",tagline:"Horaires précis de Chabbat et des fêtes",searchCity:"Rechercher une ville...",currentLocation:"Position actuelle",sunrise:"Lever du soleil",nightfall:"Sortie des étoiles",omerCount:"Compte du Omer",omerSoon:"⏳ Le compte commence à la sortie des étoiles",weeklyParasha:"Paracha de la semaine",tefillinToday:"Mise des téfiline aujourd’hui",enterCity:"Saisissez une ville ci-dessus pour commencer",support:"Assistance :",shabbatName:"Chabbat",upcomingShabbat:"Prochain Chabbat",entry:"Entrée",exit:"Sortie",friday:"Vendredi",motzaeiShabbat:"Fin de Chabbat",holidayInSub:"Début de la fête",holidayOutSub:"Fin de la fête",fastBegin:"Début du jeûne",fastEnd:"Fin du jeûne",fastNight:"Veille du jeûne",fastDawn:"Aube",fastStars:"Sortie des étoiles",tefOn:"✅ Téfiline posés aujourd’hui",tefOff:"☐ Pas encore",notifOn:"✅ Notifications activées",notifOff:"🔔 Me prévenir 3 heures avant Chabbat",openChrome:"Ouvrez Chrome pour recevoir les notifications",notifDenied:"Les notifications sont bloquées. Modifiez ce réglage dans les paramètres du navigateur.",notifPerm:"Pour recevoir des notifications, autorisez-les dans les paramètres du téléphone.",notifNo:"Notifications non autorisées.",notifTitle:"🕯️ Chabbat Chalom !",notifBody:"Chabbat commence dans 3 heures : ",fastPrefix:"Jeûne de "}
   };
-  function t(k){return (T[LANG]&&T[LANG][k]!=null)?T[LANG][k]:(T.he[k]!=null?T.he[k]:k);}
+  var REMOTE_CONFIG={};
+  function t(k){
+    var labels=REMOTE_CONFIG&&REMOTE_CONFIG.labels;
+    if(labels&&labels[LANG]&&labels[LANG][k]!=null)return labels[LANG][k];
+    return (T[LANG]&&T[LANG][k]!=null)?T[LANG][k]:(T.he[k]!=null?T.he[k]:k);
+  }
+  window.applyRemoteConfig=function(cfg){
+    try{
+      if(!cfg||typeof cfg!=="object")return;
+      REMOTE_CONFIG=cfg;
+      applyLang();
+      if(city)render();
+    }catch(e){}
+  };
   var COUNTRY_EN={"ישראל":"Israel","ארה״ב":"USA","בריטניה":"UK","צרפת":"France","גרמניה":"Germany","הולנד":"Netherlands","איטליה":"Italy","איחוד האמירויות":"UAE","יפן":"Japan","אוסטרליה":"Australia","קנדה":"Canada","ארגנטינה":"Argentina","בולגריה":"Bulgaria","תאילנד":"Thailand"};
   var COUNTRY_FR={"ישראל":"Israël","ארה״ב":"É.-U.","בריטניה":"Royaume-Uni","צרפת":"France","גרמניה":"Allemagne","הולנד":"Pays-Bas","איטליה":"Italie","איחוד האמירויות":"É.A.U.","יפן":"Japon","אוסטרליה":"Australie","קנדה":"Canada","ארגנטינה":"Argentine","בולגריה":"Bulgarie","תאילנד":"Thaïlande"};
   var HOLIDAY_EN={"ראש השנה":"Rosh Hashanah","יום כיפור":"Yom Kippur","סוכות":"Sukkot","שמיני עצרת":"Shemini Atzeret","פסח":"Passover","שבועות":"Shavuot","צום גדליה":"Fast of Gedaliah","עשרה בטבת":"Fast of 10 Tevet","תענית אסתר":"Fast of Esther","י\"ז בתמוז":"Fast of 17 Tammuz","תשעה באב":"Tisha B’Av","חנוכה":"Hanukkah","פורים":"Purim"};
