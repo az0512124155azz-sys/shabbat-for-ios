@@ -37,6 +37,7 @@ struct WebViewContainer: UIViewRepresentable {
         private lazy var locationManager: CLLocationManager = {
             let manager = CLLocationManager()
             manager.delegate = self
+            manager.desiredAccuracy = kCLLocationAccuracyBest
             return manager
         }()
 
