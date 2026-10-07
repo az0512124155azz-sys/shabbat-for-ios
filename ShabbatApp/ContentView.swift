@@ -28,6 +28,13 @@ struct WebViewContainer: UIViewRepresentable {
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 
+    static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
+        coordinator.cancelPendingLocationRequest()
+        uiView.stopLoading()
+        uiView.navigationDelegate = nil
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "shabbat")
+    }
+
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, CLLocationManagerDelegate {
@@ -180,6 +187,12 @@ struct WebViewContainer: UIViewRepresentable {
             default:
                 break
             }
+        }
+
+        func cancelPendingLocationRequest() {
+            pendingLocationRequestID = nil
+            geocoder.cancelGeocode()
+            locationManager.stopUpdatingLocation()
         }
 
         private func beginLocationRequest(requestID: Int) {
