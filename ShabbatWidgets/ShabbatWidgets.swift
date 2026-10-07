@@ -230,22 +230,26 @@ struct ShabbatTimesView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
-        let city = ShabbatCore.loadCity()
-        let event = ShabbatCore.nextObservance(city)
+        let snapshot = ShabbatCore.appSnapshot()
+        let fallbackCity = ShabbatCore.loadCity().localizedName()
+        let city = snapshot?.city.isEmpty == false ? snapshot!.city : fallbackCity
+        let title = snapshot?.eventTitle.isEmpty == false ? snapshot!.eventTitle : wl("shabbat.title")
+        let entry = snapshot?.eventEntry.isEmpty == false ? snapshot!.eventEntry : "—"
+        let exit = snapshot?.eventExit.isEmpty == false ? snapshot!.eventExit : "—"
         let compact = family == .systemSmall
 
         VStack(alignment: .leading, spacing: compact ? 9 : 12) {
-            WidgetHeader(icon: "🕯️", title: event.localizedTitle(), city: city.localizedName())
+            WidgetHeader(icon: "🕯️", title: title, city: city)
 
             if compact {
                 VStack(spacing: 7) {
-                    TimePill(label: wl("shabbat.candle"), time: ShabbatCore.fmt(event.entry, tz: city.tz), accent: gold, compact: true)
-                    TimePill(label: wl("shabbat.havdalah"), time: ShabbatCore.fmt(event.exit, tz: city.tz), accent: purple, compact: true)
+                    TimePill(label: wl("shabbat.candle"), time: entry, accent: gold, compact: true)
+                    TimePill(label: wl("shabbat.havdalah"), time: exit, accent: purple, compact: true)
                 }
             } else {
                 HStack(spacing: 10) {
-                    TimePill(label: wl("shabbat.candle"), time: ShabbatCore.fmt(event.entry, tz: city.tz), accent: gold, compact: false)
-                    TimePill(label: wl("shabbat.havdalah"), time: ShabbatCore.fmt(event.exit, tz: city.tz), accent: purple, compact: false)
+                    TimePill(label: wl("shabbat.candle"), time: entry, accent: gold, compact: false)
+                    TimePill(label: wl("shabbat.havdalah"), time: exit, accent: purple, compact: false)
                 }
             }
         }
@@ -270,12 +274,12 @@ struct NetzView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
-        let city = ShabbatCore.loadCity()
-        let noon = ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)
-        let time = ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz)
+        let snapshot = ShabbatCore.appSnapshot()
+        let city = snapshot?.city.isEmpty == false ? snapshot!.city : ShabbatCore.loadCity().localizedName()
+        let time = snapshot?.sunrise.isEmpty == false ? snapshot!.sunrise : "—"
 
         VStack(alignment: .leading, spacing: 12) {
-            WidgetHeader(icon: "🌅", title: wl("netz.title"), city: city.localizedName())
+            WidgetHeader(icon: "🌅", title: wl("netz.title"), city: city)
             Spacer(minLength: 0)
             Text(time)
                 .font(.system(size: family == .systemSmall ? 34 : 38, weight: .bold, design: .rounded))
@@ -305,12 +309,12 @@ struct TzeitView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
-        let city = ShabbatCore.loadCity()
-        let noon = ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)
-        let time = ShabbatCore.fmt(ShabbatCore.tzeit(city, noon), tz: city.tz)
+        let snapshot = ShabbatCore.appSnapshot()
+        let city = snapshot?.city.isEmpty == false ? snapshot!.city : ShabbatCore.loadCity().localizedName()
+        let time = snapshot?.nightfall.isEmpty == false ? snapshot!.nightfall : "—"
 
         VStack(alignment: .leading, spacing: 12) {
-            WidgetHeader(icon: "✨", title: wl("tzeit.title"), city: city.localizedName())
+            WidgetHeader(icon: "✨", title: wl("tzeit.title"), city: city)
             Spacer(minLength: 0)
             Text(time)
                 .font(.system(size: family == .systemSmall ? 34 : 38, weight: .bold, design: .rounded))
@@ -340,14 +344,14 @@ struct SunTimesView: View {
     @Environment(\.widgetFamily) private var family
 
     var body: some View {
-        let city = ShabbatCore.loadCity()
-        let noon = ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)
-        let sunrise = ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz)
-        let nightfall = ShabbatCore.fmt(ShabbatCore.tzeit(city, noon), tz: city.tz)
+        let snapshot = ShabbatCore.appSnapshot()
+        let city = snapshot?.city.isEmpty == false ? snapshot!.city : ShabbatCore.loadCity().localizedName()
+        let sunrise = snapshot?.sunrise.isEmpty == false ? snapshot!.sunrise : "—"
+        let nightfall = snapshot?.nightfall.isEmpty == false ? snapshot!.nightfall : "—"
         let compact = family == .systemSmall
 
         VStack(alignment: .leading, spacing: 10) {
-            WidgetHeader(icon: "☀️", title: wl("sun.title"), city: city.localizedName())
+            WidgetHeader(icon: "☀️", title: wl("sun.title"), city: city)
             if compact {
                 VStack(spacing: 7) {
                     TimePill(label: wl("sun.sunrise"), time: sunrise, accent: gold, compact: true)
@@ -379,13 +383,12 @@ struct SunTimesWidget: Widget {
 
 struct ParashaView: View {
     var body: some View {
-        let city = ShabbatCore.loadCity()
-        let t = ShabbatCore.nextShabbat(city)
-        let p = ShabbatCore.parasha(forSaturday: t.saturday)
-        let text = p.isEmpty ? wl("parasha.placeholder") : String(format: wl("parasha.format"), p)
+        let snapshot = ShabbatCore.appSnapshot()
+        let city = snapshot?.city.isEmpty == false ? snapshot!.city : ShabbatCore.loadCity().localizedName()
+        let text = snapshot?.parasha.isEmpty == false ? snapshot!.parasha : wl("parasha.placeholder")
 
         VStack(alignment: .leading, spacing: 12) {
-            WidgetHeader(icon: "📖", title: wl("parasha.title"), city: city.localizedName())
+            WidgetHeader(icon: "📖", title: wl("parasha.title"), city: city)
             Spacer(minLength: 0)
             Text(text)
                 .font(.system(size: 22, weight: .bold, design: .rounded))
@@ -499,19 +502,23 @@ struct TefillinWidget: Widget {
 
 struct ComboView: View {
     var body: some View {
-        let city = ShabbatCore.loadCity()
-        let event = ShabbatCore.nextObservance(city)
-        let noon = ShabbatCore.todayNoon(timeZone: TimeZone(identifier: city.tz) ?? .current)
+        let snapshot = ShabbatCore.appSnapshot()
+        let city = snapshot?.city.isEmpty == false ? snapshot!.city : ShabbatCore.loadCity().localizedName()
+        let title = snapshot?.eventTitle.isEmpty == false ? snapshot!.eventTitle : wl("shabbat.title")
+        let entry = snapshot?.eventEntry.isEmpty == false ? snapshot!.eventEntry : "—"
+        let exit = snapshot?.eventExit.isEmpty == false ? snapshot!.eventExit : "—"
+        let sunrise = snapshot?.sunrise.isEmpty == false ? snapshot!.sunrise : "—"
+        let nightfall = snapshot?.nightfall.isEmpty == false ? snapshot!.nightfall : "—"
 
         VStack(alignment: .leading, spacing: 10) {
-            WidgetHeader(icon: "🕯️", title: event.localizedTitle(), city: city.localizedName())
+            WidgetHeader(icon: "🕯️", title: title, city: city)
             HStack(spacing: 8) {
-                TimePill(label: wl("shabbat.candle"), time: ShabbatCore.fmt(event.entry, tz: city.tz), accent: gold, compact: true)
-                TimePill(label: wl("shabbat.havdalah"), time: ShabbatCore.fmt(event.exit, tz: city.tz), accent: purple, compact: true)
+                TimePill(label: wl("shabbat.candle"), time: entry, accent: gold, compact: true)
+                TimePill(label: wl("shabbat.havdalah"), time: exit, accent: purple, compact: true)
             }
             HStack(spacing: 8) {
-                TimePill(label: wl("sun.sunrise"), time: ShabbatCore.fmt(ShabbatCore.sunrise(city, noon), tz: city.tz), accent: gold, compact: true)
-                TimePill(label: wl("sun.nightfall"), time: ShabbatCore.fmt(ShabbatCore.tzeit(city, noon), tz: city.tz), accent: purple, compact: true)
+                TimePill(label: wl("sun.sunrise"), time: sunrise, accent: gold, compact: true)
+                TimePill(label: wl("sun.nightfall"), time: nightfall, accent: purple, compact: true)
             }
         }
         .environment(\.layoutDirection, widgetDirection)
