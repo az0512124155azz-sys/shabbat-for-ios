@@ -135,6 +135,128 @@ public enum ShabbatCore {
         set { defaults.set(newValue, forKey: "notif") }
     }
 
+    public struct SnapshotEvent {
+        public let title: String
+        public let entry: String
+        public let exit: String
+        public let entryEpoch: Int64
+        public let exitEpoch: Int64
+    }
+
+    public struct AppSnapshot {
+        public let source: String
+        public let sourceDate: String
+        public let updatedAt: Int64
+        public let city: String
+        public let timezone: String
+        public let latitude: Double
+        public let longitude: Double
+        public let sunrise: String
+        public let nightfall: String
+        public let eventTitle: String
+        public let eventEntry: String
+        public let eventExit: String
+        public let eventEntryEpoch: Int64
+        public let eventExitEpoch: Int64
+        public let parasha: String
+        public let events: [SnapshotEvent]
+    }
+
+    @discardableResult
+    public static func saveAppSnapshot(_ object: [String: Any]) -> Bool {
+        guard (object["source"] as? String) == "hebcal" else { return false }
+
+        let events = (object["events"] as? [[String: Any]] ?? []).map { event in
+            [
+                "title": event["title"] as? String ?? "",
+                "entry": event["entry"] as? String ?? "",
+                "exit": event["exit"] as? String ?? "",
+                "entryEpoch": int64(event["entryEpoch"]),
+                "exitEpoch": int64(event["exitEpoch"])
+            ] as [String: Any]
+        }
+
+        let snapshot: [String: Any] = [
+            "source": "hebcal",
+            "sourceDate": object["sourceDate"] as? String ?? "",
+            "updatedAt": int64(object["updatedAt"]),
+            "city": object["city"] as? String ?? "",
+            "timezone": object["timezone"] as? String ?? "",
+            "latitude": double(object["latitude"]),
+            "longitude": double(object["longitude"]),
+            "sunrise": object["sunrise"] as? String ?? "",
+            "nightfall": object["nightfall"] as? String ?? "",
+            "eventTitle": object["eventTitle"] as? String ?? "",
+            "eventEntry": object["eventEntry"] as? String ?? "",
+            "eventExit": object["eventExit"] as? String ?? "",
+            "eventEntryEpoch": int64(object["eventEntryEpoch"]),
+            "eventExitEpoch": int64(object["eventExitEpoch"]),
+            "parasha": object["parasha"] as? String ?? "",
+            "events": events
+        ]
+
+        defaults.set(snapshot, forKey: "app_snapshot")
+        return true
+    }
+
+    public static func appSnapshot() -> AppSnapshot? {
+        guard
+            let object = defaults.dictionary(forKey: "app_snapshot"),
+            (object["source"] as? String) == "hebcal"
+        else {
+            return nil
+        }
+
+        let events = (object["events"] as? [[String: Any]] ?? []).map {
+            SnapshotEvent(
+                title: $0["title"] as? String ?? "",
+                entry: $0["entry"] as? String ?? "",
+                exit: $0["exit"] as? String ?? "",
+                entryEpoch: int64($0["entryEpoch"]),
+                exitEpoch: int64($0["exitEpoch"])
+            )
+        }
+
+        return AppSnapshot(
+            source: "hebcal",
+            sourceDate: object["sourceDate"] as? String ?? "",
+            updatedAt: int64(object["updatedAt"]),
+            city: object["city"] as? String ?? "",
+            timezone: object["timezone"] as? String ?? "",
+            latitude: double(object["latitude"]),
+            longitude: double(object["longitude"]),
+            sunrise: object["sunrise"] as? String ?? "",
+            nightfall: object["nightfall"] as? String ?? "",
+            eventTitle: object["eventTitle"] as? String ?? "",
+            eventEntry: object["eventEntry"] as? String ?? "",
+            eventExit: object["eventExit"] as? String ?? "",
+            eventEntryEpoch: int64(object["eventEntryEpoch"]),
+            eventExitEpoch: int64(object["eventExitEpoch"]),
+            parasha: object["parasha"] as? String ?? "",
+            events: events
+        )
+    }
+
+    public static func clearAppSnapshot() {
+        defaults.removeObject(forKey: "app_snapshot")
+    }
+
+    private static func int64(_ value: Any?) -> Int64 {
+        if let value = value as? Int64 { return value }
+        if let value = value as? Int { return Int64(value) }
+        if let value = value as? Double { return Int64(value) }
+        if let value = value as? NSNumber { return value.int64Value }
+        if let value = value as? String { return Int64(value) ?? 0 }
+        return 0
+    }
+
+    private static func double(_ value: Any?) -> Double {
+        if let value = value as? Double { return value }
+        if let value = value as? NSNumber { return value.doubleValue }
+        if let value = value as? String { return Double(value) ?? 0 }
+        return 0
+    }
+
     // MARK: - Solar calculations (NOAA, matching Android / web)
 
     private static func julianDay(_ y0: Int, _ m0: Int, _ d: Int) -> Double {
