@@ -634,7 +634,7 @@
           disable:function(){post({cmd:"disableNotif"});},
           language:function(lang){post({cmd:"setLanguage",language:lang});},
           sync:function(s){post({cmd:"syncSnapshot",snapshot:s});},
-          locate:function(){post({cmd:"locate"});}
+          locate:function(id){post({cmd:"locate",id:Number(id)||0});}
         };
       }
       return null;
