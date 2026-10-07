@@ -12,6 +12,7 @@ on:
       - main
       - claude/shabbat-android-ios-review-iet8fw
       - fix/ios-widget-parity-2026-09-15
+      - sync/android-parity-2026-10-07
     paths:
       - 'ShabbatApp/**'
       - 'ShabbatWidgets/**'

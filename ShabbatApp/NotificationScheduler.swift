@@ -3,52 +3,54 @@ import UserNotifications
 
 enum NotificationScheduler {
 
-    /// Re-creates future Shabbat / Yom-Tov reminders. Overlapping observances
-    /// are merged by ShabbatCore, so a holiday joined to Shabbat produces one
-    /// entry reminder and one final exit reminder.
     static func refresh() {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
-        guard ShabbatCore.notifEnabled else { return }
 
-        let city = ShabbatCore.loadCity()
-        let now = Date()
-        var cursor = now
-
-        // Keep comfortably below iOS's 64-pending-notification limit.
-        for index in 0..<16 {
-            let event = ShabbatCore.nextObservance(city, now: cursor)
-
-            let erevFire = event.entry.addingTimeInterval(-3 * 3600)
-            if erevFire > now {
-                let copy = erevCopy(
-                    event: event.localizedTitle(),
-                    time: ShabbatCore.fmt(event.entry, tz: city.tz)
-                )
-                schedule(
-                    id: "observance-erev-\(index)-\(Int(event.entry.timeIntervalSince1970))",
-                    title: copy.0,
-                    body: copy.1,
-                    at: erevFire,
-                    timeZoneID: city.tz
-                )
-            }
-
-            let exitFire = event.exit.addingTimeInterval(10 * 60)
-            if exitFire > now {
-                let copy = motzaeiCopy(event: event.localizedTitle())
-                schedule(
-                    id: "observance-exit-\(index)-\(Int(event.exit.timeIntervalSince1970))",
-                    title: copy.0,
-                    body: copy.1,
-                    at: exitFire,
-                    timeZoneID: city.tz
-                )
-            }
-
-            // Ask for the following observance rather than rediscovering this one.
-            cursor = event.exit.addingTimeInterval(60)
+        guard ShabbatCore.notifEnabled,
+              let snapshot = ShabbatCore.appSnapshot()
+        else {
+            return
         }
+
+        let now = Date().timeIntervalSince1970 * 1000.0
+        let futureEntry = snapshot.events
+            .filter { $0.entryEpoch > 0 && Double($0.entryEpoch) - 3 * 60 * 60 * 1000 > now + 60_000 }
+            .min { $0.entryEpoch < $1.entryEpoch }
+
+        let futureExit = snapshot.events
+            .filter { $0.exitEpoch > 0 && Double($0.exitEpoch) + 10 * 60 * 1000 > now + 60_000 }
+            .min { $0.exitEpoch < $1.exitEpoch }
+
+        if let event = futureEntry {
+            let fire = Date(timeIntervalSince1970: Double(event.entryEpoch) / 1000.0)
+                .addingTimeInterval(-3 * 60 * 60)
+            let copy = erevCopy(event: event.title, time: event.entry)
+            schedule(
+                id: "observance-erev",
+                title: copy.0,
+                body: copy.1,
+                at: fire,
+                timeZoneID: snapshot.timezone
+            )
+        }
+
+        if let event = futureExit {
+            let fire = Date(timeIntervalSince1970: Double(event.exitEpoch) / 1000.0)
+                .addingTimeInterval(10 * 60)
+            let copy = motzaeiCopy(event: event.title)
+            schedule(
+                id: "observance-exit",
+                title: copy.0,
+                body: copy.1,
+                at: fire,
+                timeZoneID: snapshot.timezone
+            )
+        }
+    }
+
+    static func disablePendingOnly() {
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
 
     private static func erevCopy(event: String, time: String) -> (String, String) {
@@ -115,7 +117,9 @@ enum NotificationScheduler {
     }
 
     static func enable(completion: @escaping (Bool) -> Void) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+        UNUserNotificationCenter.current().requestAuthorization(
+            options: [.alert, .sound, .badge]
+        ) { granted, _ in
             DispatchQueue.main.async {
                 ShabbatCore.notifEnabled = granted
                 if granted { refresh() }
@@ -126,6 +130,6 @@ enum NotificationScheduler {
 
     static func disable() {
         ShabbatCore.notifEnabled = false
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        disablePendingOnly()
     }
 }
