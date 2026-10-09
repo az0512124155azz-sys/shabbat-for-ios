@@ -1416,6 +1416,7 @@
     var REMOTE_CONFIG_KEY="sb_publishable_nFeJ-6rlTjAuAB0H20fhPA_ORPp2COx";
     var REMOTE_CONFIG_CACHE_KEY="shabbat_remote_config_v1";
     var REMOTE_CONFIG={labels:{},featureFlags:{},settings:{},cities:[]};
+    var remoteFetchInFlight=false,lastRemoteFetchAt=0;
 
     function remotePlatform(){
       if(window.ShabbatNative)return"android";
@@ -1533,8 +1534,11 @@
     }
 
     function fetchRemoteContent(){
-      var p=remotePlatform();
+      var p=remotePlatform(),now=Date.now();
       if(p==="web")return;
+      if(remoteFetchInFlight||now-lastRemoteFetchAt<60000)return;
+      remoteFetchInFlight=true;
+      lastRemoteFetchAt=now;
       var url=REMOTE_CONFIG_URL+
         "/rest/v1/app_remote_config?select=id,revision,min_build,config&enabled=eq.true&id=in.(global,"+
         encodeURIComponent(p)+")";
@@ -1553,7 +1557,8 @@
         if(!cfg)return;
         try{localStorage.setItem(REMOTE_CONFIG_CACHE_KEY,JSON.stringify({savedAt:Date.now(),config:cfg}));}catch(e){}
         applyRemoteContent(cfg);
-      }).catch(function(){if(timer)clearTimeout(timer);});
+      }).catch(function(){if(timer)clearTimeout(timer);})
+        .then(function(){remoteFetchInFlight=false;});
     }
 
     (function(){
@@ -1568,9 +1573,9 @@
       if(key!==lastRenderedDayKey)render(false);
     }
     document.addEventListener("visibilitychange",function(){
-      if(!document.hidden)refreshIfDayChanged();
+      if(!document.hidden){refreshIfDayChanged();fetchRemoteContent();}
     });
-    window.addEventListener("focus",refreshIfDayChanged);
+    window.addEventListener("focus",function(){refreshIfDayChanged();fetchRemoteContent();});
     setInterval(refreshIfDayChanged,300000);
 </script>
 </body>
