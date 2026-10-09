@@ -1,0 +1,83 @@
+name: Publish iOS Remote Content
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type PUBLISH to send iOS config to the live app
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shabbat-ios-remote-content-production
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.confirm == 'PUBLISH' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify publishing secret
+        env:
+          SUPABASE_SECRET_KEY: ${{ secrets.SHABBAT_SUPABASE_SECRET_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SUPABASE_SECRET_KEY:-}" ]; then
+            echo "Missing repository secret SHABBAT_SUPABASE_SECRET_KEY"
+            exit 1
+          fi
+
+      - name: Validate iOS config
+        run: |
+          set -euo pipefail
+          jq -e '
+            (.min_build | type == "number") and
+            (.enabled | type == "boolean") and
+            (.config | type == "object") and
+            (.config.schema == 1) and
+            ((.config | keys - ["schema","labels","featureFlags","settings","cities"]) | length == 0)
+          ' remote-config/ios.json >/dev/null
+
+      - name: Publish iOS config
+        env:
+          SUPABASE_SECRET_KEY: ${{ secrets.SHABBAT_SUPABASE_SECRET_KEY }}
+          SUPABASE_URL: https://uekmjqaaupuidvtyoemb.supabase.co
+        run: |
+          set -euo pipefail
+          revision="$(date +%s)"
+          body="$(jq -c \
+            --arg id "ios" \
+            --argjson revision "$revision" \
+            '{
+              id: $id,
+              revision: $revision,
+              min_build: .min_build,
+              enabled: .enabled,
+              config: .config,
+              published_at: (now | todateiso8601),
+              updated_at: (now | todateiso8601)
+            }' remote-config/ios.json)"
+
+          curl --fail-with-body --silent --show-error \
+            -X POST "$SUPABASE_URL/rest/v1/app_remote_config?on_conflict=id" \
+            -H "apikey: $SUPABASE_SECRET_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: resolution=merge-duplicates,return=representation" \
+            --data "[$body]"
+          echo
+
+      - name: Summary
+        run: |
+          {
+            echo "## iOS remote content published"
+            echo ""
+            echo "- Target: ios"
+            echo "- Trigger: manual workflow_dispatch"
+            echo "- Normal repository changes do not publish content"
+          } >> "$GITHUB_STEP_SUMMARY"
