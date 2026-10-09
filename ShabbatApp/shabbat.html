@@ -115,6 +115,140 @@
         html[dir="rtl"] .lang-option{text-align:center}
         @media(max-width:360px){.lang-picker{left:8px}.lang-btn{width:36px;height:32px;line-height:32px;font-size:11px}.lang-menu{top:38px}}
 
+        /* Tablet sizing only.
+           Keep the exact same single-column phone design and component order;
+           only scale width, spacing and type on larger screens. */
+        @media (min-width:600px){
+          .page{
+            max-width:620px;
+            padding:44px 28px 46px;
+          }
+          .hdr{margin-bottom:30px}
+          .hdr-icon{font-size:72px}
+          .hdr-title{font-size:48px}
+          .hdr-sub{font-size:17px}
+
+          .sw{margin-bottom:14px}
+          .sb{
+            height:68px;
+            padding:0 22px;
+            border-radius:18px;
+          }
+          .sb input{font-size:20px}
+          .sdrop li{padding:16px 22px;font-size:17px}
+
+          .sun-row{gap:12px;margin-bottom:12px}
+          .sun-c{
+            padding:20px 16px;
+            border-radius:18px;
+          }
+          .sun-lbl{font-size:13px;margin-bottom:12px}
+          .sun-val{font-size:36px}
+
+          .shab{
+            padding:30px 24px 26px;
+            margin-bottom:12px;
+            border-radius:22px;
+          }
+          .shab-title{font-size:28px}
+          .shab-date{font-size:14px;margin-bottom:26px}
+          .tb-icon{font-size:38px}
+          .tb-lbl{font-size:14px}
+          .tb-val{font-size:48px}
+          .tb-sub{font-size:13px}
+          html[lang="en"] .tb-val{font-size:40px}
+          html[lang="en"] .sun-val{font-size:32px}
+
+          .omer{
+            padding:24px 20px;
+            margin-bottom:12px;
+            border-radius:18px;
+          }
+          .omer-lbl{font-size:12px}
+          .omer-num{font-size:70px}
+          .omer-lets{font-size:24px}
+          .omer-txt{font-size:15px}
+          .omer-bracha{font-size:14px;padding:15px 16px}
+
+          .para{
+            padding:20px 22px;
+            margin-bottom:12px;
+            border-radius:18px;
+          }
+          .para-lbl{font-size:12px}
+          .para-name{font-size:25px}
+
+          .tef{
+            padding:22px;
+            margin-bottom:12px;
+            border-radius:20px;
+          }
+          .tef-title{font-size:21px}
+          #tefBtn{
+            padding:19px;
+            font-size:18px;
+            border-radius:14px;
+          }
+
+          #notifBtn{
+            padding:22px;
+            font-size:19px;
+            margin-bottom:16px;
+            border-radius:18px;
+          }
+
+          .footer{padding-top:24px}
+          .footer-credit,.footer-support{font-size:14px}
+
+          .lang-picker{
+            left:24px;
+            top:calc(env(safe-area-inset-top,0px) + 18px);
+          }
+          .lang-btn{
+            width:42px;
+            height:38px;
+            line-height:38px;
+            font-size:13px;
+          }
+          .lang-menu{top:45px;width:52px}
+
+          .empty-mid{min-height:440px}
+        }
+
+        @media (min-width:800px){
+          .page{
+            max-width:700px;
+            padding-left:34px;
+            padding-right:34px;
+          }
+          .hdr-icon{font-size:78px}
+          .hdr-title{font-size:52px}
+          .hdr-sub{font-size:18px}
+          .sb{height:72px}
+          .sb input{font-size:21px}
+          .sun-val{font-size:40px}
+          .shab-title{font-size:30px}
+          .tb-val{font-size:54px}
+          html[lang="en"] .tb-val{font-size:44px}
+          html[lang="en"] .sun-val{font-size:35px}
+          .para-name{font-size:27px}
+          .tef-title{font-size:22px}
+          #tefBtn{font-size:19px}
+          #notifBtn{font-size:20px}
+        }
+
+        @media (min-width:600px) and (orientation:landscape){
+          .page{
+            max-width:700px;
+            padding-top:30px;
+            padding-bottom:34px;
+          }
+          .hdr{margin-bottom:22px}
+          .hdr-icon{font-size:60px;margin-bottom:8px}
+          .hdr-title{font-size:42px}
+          .hdr-sub{font-size:16px}
+        }
+
         .hidden{display:none!important}
         @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
     </style></head>
