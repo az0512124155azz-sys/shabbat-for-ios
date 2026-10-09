@@ -1,0 +1,11 @@
+{
+  "min_build": 1,
+  "enabled": true,
+  "config": {
+    "schema": 1,
+    "labels": {},
+    "featureFlags": {},
+    "settings": {},
+    "cities": []
+  }
+}
