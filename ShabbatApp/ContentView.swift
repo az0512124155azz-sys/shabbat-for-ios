@@ -52,7 +52,7 @@ struct WebViewContainer: UIViewRepresentable {
             for kind in widgetKinds {
                 WidgetCenter.shared.reloadTimelines(ofKind: kind)
             }
-            Self.reloadWidgets()
+            WidgetCenter.shared.reloadAllTimelines()
         }
         weak var webView: WKWebView?
         private let geocoder = CLGeocoder()
