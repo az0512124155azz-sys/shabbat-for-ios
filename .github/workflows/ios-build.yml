@@ -14,6 +14,7 @@ on:
       - fix/ios-widget-parity-2026-09-15
       - sync/android-parity-2026-10-07
       - fix/ios-widget-language-sync-2026-10-09
+      - fix/ios-ipad-scale-only-2026-10-09
     paths:
       - 'ShabbatApp/**'
       - 'ShabbatWidgets/**'
