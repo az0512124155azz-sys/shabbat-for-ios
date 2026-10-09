@@ -44,6 +44,10 @@ public enum ShabbatCore {
         set {
             guard ["he", "en", "fr"].contains(newValue) else { return }
             defaults.set(newValue, forKey: "language")
+            // WidgetKit runs in a separate process. Flush the shared App Group
+            // defaults before requesting timeline reloads so the extension sees
+            // the newly selected language immediately.
+            defaults.synchronize()
         }
     }
 

@@ -4,7 +4,15 @@ import AppIntents
 
 // MARK: - Language
 
-private func widgetLanguage() -> String { ShabbatCore.language }
+private func widgetLanguage() -> String {
+    let shared = UserDefaults(suiteName: ShabbatCore.appGroup)
+    shared?.synchronize()
+    if let language = shared?.string(forKey: "language"),
+       ["he", "en", "fr"].contains(language) {
+        return language
+    }
+    return ShabbatCore.language
+}
 private var widgetDirection: LayoutDirection { widgetLanguage() == "he" ? .rightToLeft : .leftToRight }
 
 private let WSTR_HE: [String: String] = [

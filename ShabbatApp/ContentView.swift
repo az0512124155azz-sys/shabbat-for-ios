@@ -38,6 +38,22 @@ struct WebViewContainer: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler, CLLocationManagerDelegate {
+        private static let widgetKinds = [
+            "ShabbatTimesWidget",
+            "NetzWidget",
+            "TzeitWidget",
+            "SunTimesWidget",
+            "ParashaWidget",
+            "TefillinWidget",
+            "ComboWidget"
+        ]
+
+        private static func reloadWidgets() {
+            for kind in widgetKinds {
+                WidgetCenter.shared.reloadTimelines(ofKind: kind)
+            }
+            WidgetCenter.shared.reloadAllTimelines()
+        }
         weak var webView: WKWebView?
         private let geocoder = CLGeocoder()
         private var pendingLocationRequestID: Int?
@@ -66,7 +82,7 @@ struct WebViewContainer: UIViewRepresentable {
         @objc private func appBecameActive() {
             injectState()
             NotificationScheduler.refresh()
-            WidgetCenter.shared.reloadAllTimelines()
+            Self.reloadWidgets()
         }
 
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
@@ -145,13 +161,13 @@ struct WebViewContainer: UIViewRepresentable {
                 if changed {
                     ShabbatCore.clearAppSnapshot()
                     NotificationScheduler.disablePendingOnly()
-                    WidgetCenter.shared.reloadAllTimelines()
+                    Self.reloadWidgets()
                 }
 
             case "tefillin":
                 if let key = body["key"] as? String, let value = body["value"] as? Bool {
                     ShabbatCore.setTefillin(key, value)
-                    WidgetCenter.shared.reloadTimelines(ofKind: "TefillinWidget")
+                    Self.reloadWidgets()
                 }
 
             case "enableNotif":
@@ -170,14 +186,17 @@ struct WebViewContainer: UIViewRepresentable {
                    ["he", "en", "fr"].contains(language) {
                     ShabbatCore.language = language
                     NotificationScheduler.refresh()
-                    WidgetCenter.shared.reloadAllTimelines()
+                    // The language value is stored in the shared App Group.
+                    // Reload every widget kind after the value has been flushed
+                    // so existing home-screen widgets switch HE/EN/FR immediately.
+                    Self.reloadWidgets()
                 }
 
             case "syncSnapshot":
                 if let snapshot = body["snapshot"] as? [String: Any],
                    ShabbatCore.saveAppSnapshot(snapshot) {
                     NotificationScheduler.refresh()
-                    WidgetCenter.shared.reloadAllTimelines()
+                    Self.reloadWidgets()
                 }
 
             case "locate":
