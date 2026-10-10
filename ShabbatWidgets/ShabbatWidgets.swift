@@ -544,6 +544,177 @@ struct ComboWidget: Widget {
     }
 }
 
+// MARK: - Lock Screen widgets (iOS 16+)
+
+@available(iOSApplicationExtension 16.0, *)
+private struct LockScreenShabbatView: View {
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        let snapshot = ShabbatCore.appSnapshot()
+        let title = snapshot?.eventTitle.isEmpty == false ? snapshot!.eventTitle : wl("shabbat.title")
+        let entry = snapshot?.eventEntry.isEmpty == false ? snapshot!.eventEntry : "—"
+        let exit = snapshot?.eventExit.isEmpty == false ? snapshot!.eventExit : "—"
+
+        Group {
+            switch family {
+            case .accessoryInline:
+                Text("🕯️ \(title) · \(entry) → \(exit)")
+                    .oneLine(0.55)
+
+            case .accessoryCircular:
+                VStack(spacing: 1) {
+                    Text("🕯️")
+                        .font(.system(size: 14))
+                    Text(entry)
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .oneLine(0.65)
+                }
+
+            default:
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title)
+                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .oneLine(0.55)
+                    HStack(spacing: 8) {
+                        Label(entry, systemImage: "sunset.fill")
+                        Label(exit, systemImage: "sparkles")
+                    }
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .monospacedDigit()
+                    .oneLine(0.55)
+                }
+            }
+        }
+        .environment(\.layoutDirection, widgetDirection)
+        .widgetURL(URL(string: "shabbat://open"))
+    }
+}
+
+@available(iOSApplicationExtension 16.0, *)
+struct LockScreenShabbatWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "LockScreenShabbatWidget", provider: ShabProvider()) { _ in
+            LockScreenShabbatView()
+        }
+        .configurationDisplayName(wl("shabbat.config_name"))
+        .description(wl("shabbat.config_desc"))
+        .supportedFamilies([.accessoryInline, .accessoryCircular, .accessoryRectangular])
+    }
+}
+
+@available(iOSApplicationExtension 16.0, *)
+private struct LockScreenSunView: View {
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        let snapshot = ShabbatCore.appSnapshot()
+        let sunrise = snapshot?.sunrise.isEmpty == false ? snapshot!.sunrise : "—"
+        let nightfall = snapshot?.nightfall.isEmpty == false ? snapshot!.nightfall : "—"
+
+        Group {
+            switch family {
+            case .accessoryInline:
+                Text("🌅 \(sunrise) · ✨ \(nightfall)")
+                    .oneLine(0.6)
+
+            case .accessoryCircular:
+                VStack(spacing: 1) {
+                    Image(systemName: "sunrise.fill")
+                        .font(.system(size: 13))
+                    Text(sunrise)
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .oneLine(0.65)
+                }
+
+            default:
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Label(wl("sun.sunrise"), systemImage: "sunrise.fill")
+                            .font(.system(size: 9, weight: .semibold))
+                        Text(sunrise)
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                    }
+                    VStack(alignment: .leading, spacing: 1) {
+                        Label(wl("sun.nightfall"), systemImage: "sparkles")
+                            .font(.system(size: 9, weight: .semibold))
+                        Text(nightfall)
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                    }
+                }
+            }
+        }
+        .environment(\.layoutDirection, widgetDirection)
+        .widgetURL(URL(string: "shabbat://open"))
+    }
+}
+
+@available(iOSApplicationExtension 16.0, *)
+struct LockScreenSunWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "LockScreenSunWidget", provider: ShabProvider()) { _ in
+            LockScreenSunView()
+        }
+        .configurationDisplayName(wl("sun.config_name"))
+        .description(wl("sun.config_desc"))
+        .supportedFamilies([.accessoryInline, .accessoryCircular, .accessoryRectangular])
+    }
+}
+
+@available(iOSApplicationExtension 16.0, *)
+private struct LockScreenParashaView: View {
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        let snapshot = ShabbatCore.appSnapshot()
+        let parasha = snapshot?.parasha.isEmpty == false ? snapshot!.parasha : wl("parasha.placeholder")
+
+        Group {
+            switch family {
+            case .accessoryInline:
+                Text("📖 \(parasha)")
+                    .oneLine(0.55)
+
+            case .accessoryCircular:
+                VStack(spacing: 1) {
+                    Image(systemName: "book.closed.fill")
+                        .font(.system(size: 13))
+                    Text(parasha)
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .oneLine(0.45)
+                }
+
+            default:
+                VStack(alignment: .leading, spacing: 2) {
+                    Label(wl("parasha.title"), systemImage: "book.closed.fill")
+                        .font(.system(size: 9, weight: .semibold))
+                    Text(parasha)
+                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .oneLine(0.5)
+                }
+            }
+        }
+        .environment(\.layoutDirection, widgetDirection)
+        .widgetURL(URL(string: "shabbat://open"))
+    }
+}
+
+@available(iOSApplicationExtension 16.0, *)
+struct LockScreenParashaWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "LockScreenParashaWidget", provider: ShabProvider()) { _ in
+            LockScreenParashaView()
+        }
+        .configurationDisplayName(wl("parasha.config_name"))
+        .description(wl("parasha.config_desc"))
+        .supportedFamilies([.accessoryInline, .accessoryCircular, .accessoryRectangular])
+    }
+}
+
 // MARK: - Bundle
 
 @main
@@ -556,5 +727,10 @@ struct ShabbatWidgetsBundle: WidgetBundle {
         ParashaWidget()
         TefillinWidget()
         ComboWidget()
+        if #available(iOSApplicationExtension 16.0, *) {
+            LockScreenShabbatWidget()
+            LockScreenSunWidget()
+            LockScreenParashaWidget()
+        }
     }
 }
