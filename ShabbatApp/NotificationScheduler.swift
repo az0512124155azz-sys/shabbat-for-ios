@@ -73,22 +73,75 @@ enum NotificationScheduler {
         }
     }
 
+    private enum ExitEventKind {
+        case shabbat
+        case holiday
+        case combined
+    }
+
+    private static func exitEventKind(_ event: String) -> ExitEventKind {
+        let normalized = event
+            .folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+            .lowercased()
+
+        let isShabbat =
+            normalized.contains("שבת") ||
+            normalized.contains("shabbat") ||
+            normalized.contains("chabbat")
+
+        let isCombined = isShabbat && event.contains("+")
+        if isCombined { return .combined }
+        return isShabbat ? .shabbat : .holiday
+    }
+
     private static func motzaeiCopy(event: String) -> (String, String) {
-        switch ShabbatCore.language {
-        case "en":
+        switch (ShabbatCore.language, exitEventKind(event)) {
+        case ("en", .shabbat):
+            return (
+                "⭐ Shabbat has ended",
+                "Shabbat has ended. Shavua Tov!"
+            )
+        case ("en", .combined):
+            return (
+                "⭐ Shabbat and holiday have ended",
+                "\(event) has ended. Wishing you a wonderful and blessed week!"
+            )
+        case ("en", .holiday):
             return (
                 "⭐ \(event) has ended",
-                "The observance has ended. Wishing you a wonderful and blessed week!"
+                "\(event) has ended."
             )
-        case "fr":
+
+        case ("fr", .shabbat):
+            return (
+                "⭐ Fin du Chabbat",
+                "Le Chabbat est terminé. Chavoua Tov !"
+            )
+        case ("fr", .combined):
+            return (
+                "⭐ Fin du Chabbat et de la fête",
+                "\(event) est terminé. Nous vous souhaitons une excellente semaine !"
+            )
+        case ("fr", .holiday):
             return (
                 "⭐ Fin de \(event)",
-                "La fête ou le Chabbat est terminé. Nous vous souhaitons une merveilleuse semaine !"
+                "\(event) est terminé."
             )
-        default:
+
+        case (_, .shabbat):
+            return (
+                "⭐ צאת השבת",
+                "השבת הסתיימה. שבוע טוב ומבורך!"
+            )
+        case (_, .combined):
+            return (
+                "⭐ צאת שבת והחג",
+                "\(event) הסתיימו. שבוע טוב ומבורך!"
+            )
+        case (_, .holiday):
             return (
                 "⭐ צאת \(event)",
-                "השבת או החג הסתיימו. שיהיה לך שבוע נפלא ומבורך!"
+                "\(event) הסתיים."
             )
         }
     }
