@@ -23,7 +23,7 @@ public struct ShabCity {
 }
 
 public enum ShabbatCore {
-    public static let appGroup = "group.com.avishait.shabbat"
+    public static let appGroup = "group.com.coralstudiosltd.shabbat"
 
     public static var defaults: UserDefaults {
         UserDefaults(suiteName: appGroup) ?? .standard
